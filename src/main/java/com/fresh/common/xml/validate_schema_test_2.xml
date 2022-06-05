@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roots  xmlns="http://www.fresh.com/namespace/roots"
+        xmlns:fl="http://www.fresh.com/namespace/fl"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.fresh.com/namespace/roots
+        file:/D:\ideaProject\NormalProject\src\main\resources\validate_schema_test_2.xml1.xsd
+        http://www.fresh.com/namespace/fl
+        file:/D:\ideaProject\NormalProject\src\main\resources\validate_schema_test_2.xsd">
+    <bb>123</bb>
+    <kk>321</kk>
+    <fl:jj>12</fl:jj>
+    <ll></ll>
+</roots>

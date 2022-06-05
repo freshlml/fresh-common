@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<roots xmlns="http://www.fresh.com/namespace/roots"
+       xmlns:fl="http://www.fresh.com/namespace/fl"
+>
+    <!-- comments -->
+    <bean id="bean1" class="com.fresh.fl.SimpleLogincExp"> 123 </bean>
+    <fl:bean id="bean2" class="com.fresh.fl.NumberUnitFormat"/>
+</roots>
