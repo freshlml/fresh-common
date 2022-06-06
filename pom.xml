@@ -7,10 +7,12 @@
     <parent>
         <groupId>com.fresh</groupId>
         <artifactId>fresh-common-dependencies</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.0</version> <!-- 此处引用的fresh-common-dependencies版本 -->
     </parent>
     <groupId>com.fresh</groupId>
     <artifactId>fresh-common</artifactId>
+    <!-- 当前版本1.0.0，当发生修改后一般也会维持1.0.0不变
+         当改动不能向前兼容时，需要向前推进一个版本号，下层则可以依赖于新版本和旧版本 -->
     <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>fresh-common</name>
