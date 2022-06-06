@@ -1,3 +1,9 @@
 fresh桶的common依赖
 com.fresh:fresh-common
 包前缀: com.fresh.common
+
+本地: 需要打包到本地仓库
+线上: 需要打包到远端仓库
+
+fresh桶的下层项目依赖此jar，此jar不应该依赖下层项目的jar，否则形成相互依赖
+
