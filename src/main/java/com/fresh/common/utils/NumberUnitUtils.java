@@ -73,6 +73,8 @@ public abstract class NumberUnitUtils {
 
     /**
      * 将Number对象转化为指定的Number子类型
+     * 通常情况"小类型"转换成"大类型",no p
+     * "大类型"转换成"小类型",如果"大类型"未超过"小类型"的范围,no p
      *eg: NumberUnitUtils.convertNumberToTargetClazz(1, Integer.class, true);  //Integer to Integer
      *    NumberUnitUtils.convertNumberToTargetClazz(1123L, Integer.class, true);  //Long to Integer
      *    NumberUnitUtils.convertNumberToTargetClazz(123, Long.class, true);  //Integer to Long
