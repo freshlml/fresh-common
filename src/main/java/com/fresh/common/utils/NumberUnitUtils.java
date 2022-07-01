@@ -95,7 +95,7 @@ public abstract class NumberUnitUtils {
             if(checkBorder) {
                 long l = resolveLongValue(number, clazz);
                 if(l < Byte.MIN_VALUE || l > Byte.MAX_VALUE) {
-                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于"+clazz.getName()+"]允许的最大值", null);
+                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+clazz.getName()+"]允许的最大值", null);
                 }
             }
             return (T) Byte.valueOf(number.byteValue());
@@ -103,7 +103,7 @@ public abstract class NumberUnitUtils {
             if(checkBorder) {
                 long l = resolveLongValue(number, clazz);
                 if (l < Short.MIN_VALUE || l > Short.MAX_VALUE) {
-                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于"+clazz.getName()+"]允许的最大值", null);
+                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+clazz.getName()+"]允许的最大值", null);
                 }
             }
             return (T) Short.valueOf(number.shortValue());
@@ -111,7 +111,7 @@ public abstract class NumberUnitUtils {
             if(checkBorder) {
                 long l = resolveLongValue(number, clazz);
                 if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
-                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于"+clazz.getName()+"]允许的最大值", null);
+                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+clazz.getName()+"]允许的最大值", null);
                 }
             }
             return (T) Integer.valueOf(number.intValue());
