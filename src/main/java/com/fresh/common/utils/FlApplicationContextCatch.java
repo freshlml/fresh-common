@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+//todo
 @Component("applicationContextCatch")
 public class FlApplicationContextCatch implements ApplicationContextAware {
 

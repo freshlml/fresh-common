@@ -8,8 +8,5 @@ public abstract class AnnotatedUtils {
     //Method.getAnnotatedReturnType
     //Field.getAnnotatedType
 
-    //AnnotatedElement
-    //AnnotationAttribute
-    //core.annotation
 
 }
