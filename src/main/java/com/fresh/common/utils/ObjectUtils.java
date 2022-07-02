@@ -1,11 +1,16 @@
 package com.fresh.common.utils;
 
+
 import java.util.Arrays;
 
 public abstract class ObjectUtils {
 
     private static final int INITIAL_HASH = 7;
     private static final int MULTIPLIER = 31;
+
+    private static final String EMPTY_STRING = "";
+    private static final String NULL_STRING = "null";
+
     /**
      * 比较 declared class(如primitive包装类型, String, 自定义class), 数组(primitive数组, declared class数组) 的相等性
      * @param o1
@@ -166,6 +171,48 @@ public abstract class ObjectUtils {
         }
         return o.hashCode();
     }
+
+
+    public static String objToString(Object obj) {
+        if (obj == null) {
+            return NULL_STRING;
+        }
+        if (obj instanceof String) {
+            return (String) obj;
+        }
+        if (obj instanceof Object[]) {
+            return Arrays.toString((Object[]) obj);
+        }
+        if (obj instanceof boolean[]) {
+            return Arrays.toString((boolean[]) obj);
+        }
+        if (obj instanceof byte[]) {
+            return Arrays.toString((byte[]) obj);
+        }
+        if (obj instanceof char[]) {
+            return Arrays.toString((char[]) obj);
+        }
+        if (obj instanceof double[]) {
+            return Arrays.toString((double[]) obj);
+        }
+        if (obj instanceof float[]) {
+            return Arrays.toString((float[]) obj);
+        }
+        if (obj instanceof int[]) {
+            return Arrays.toString((int[]) obj);
+        }
+        if (obj instanceof long[]) {
+            return Arrays.toString((long[]) obj);
+        }
+        if (obj instanceof short[]) {
+            return Arrays.toString((short[]) obj);
+        }
+        String str = obj.toString();
+        return (str != null ? str : EMPTY_STRING);
+    }
+
+
+
 
 
 }

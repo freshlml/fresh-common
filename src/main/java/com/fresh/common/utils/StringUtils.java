@@ -4,6 +4,7 @@ public abstract class StringUtils {
 
     /**路径分隔符*/
     private static final String PATH_SEP = "/";
+    private static final String WINDOWS_PATH_SEPARATOR = "\\";
     /**包分隔符*/
     private static final String PACKAGE_SEP = ".";
     /**类文件后缀*/
