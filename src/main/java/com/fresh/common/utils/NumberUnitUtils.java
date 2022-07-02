@@ -6,7 +6,8 @@ import java.util.*;
 
 public abstract class NumberUnitUtils {
 
-    public static final Map<Integer, String> CONV = new HashMap<>();
+    private static final Map<Integer, String> CONV = new HashMap<>();
+    private static final List<Integer> defaultSkips = new ArrayList<>();
     private static final int MAXIMUM_CAPACITY = 1 << 30;
     private static final BigInteger LONG_MIN = BigInteger.valueOf(Long.MIN_VALUE);
     private static final BigInteger LONG_MAX = BigInteger.valueOf(Long.MAX_VALUE);
@@ -14,10 +15,40 @@ public abstract class NumberUnitUtils {
     private static final Set<Class<? extends Number>> NUMBER_TYPE_CACHE;
 
     static {
-        CONV.put(1, "十");
-        CONV.put(2, "百");
-        CONV.put(3, "K");
-        CONV.put(4, "W");
+        //CONV.put(-6, "微");      //index=-6, 10^-6
+        //CONV.put(-3, "毫");      //index=-3, 10^-3
+        //CONV.put(-2, "厘");      //index=-2, 10^-2
+        //CONV.put(-1, "分");      //index=-1, 10^-1
+        CONV.put(0, "");       //index=0, 10^0
+        CONV.put(1, "十");       //index=1, 10^1
+        CONV.put(2, "百");       //index=2, 10^2
+        CONV.put(3, "K");       //index=3,  10^3
+        CONV.put(4, "W");       //index=4,  10^4
+        CONV.put(5, "十万");      //index=5,  10^5
+        CONV.put(6, "百万");      //index=6,  10^6
+        CONV.put(7, "千万");      //index=7,  10^7
+        CONV.put(8, "亿");       //index=8,  10^8
+        CONV.put(9, "十亿");      //index=9,  10^9
+        CONV.put(10, "百亿");     //index=10,  10^10
+        CONV.put(11, "千亿");     //index=11,  10^11
+        CONV.put(12, "万亿");     //index=12,  10^12
+        CONV.put(13, "十万亿");    //index=13,  10^13
+        CONV.put(14, "百万亿");    //index=14,  10^14
+        CONV.put(15, "千万亿");    //index=15,  10^15
+        CONV.put(16, "亿亿");     //index=16,  10^16
+
+        defaultSkips.add(1);
+        defaultSkips.add(2);
+        defaultSkips.add(5);
+        defaultSkips.add(6);
+        defaultSkips.add(7);
+        defaultSkips.add(9);
+        defaultSkips.add(10);
+        defaultSkips.add(11);
+        defaultSkips.add(13);
+        defaultSkips.add(14);
+        defaultSkips.add(15);
+
 
         Set<Class<? extends Number>> numberTypes = new HashSet<>(8);
         numberTypes.add(Byte.class);
@@ -31,107 +62,138 @@ public abstract class NumberUnitUtils {
         NUMBER_TYPE_CACHE = Collections.unmodifiableSet(numberTypes);
     }
 
-    /**
-     * 数字值转化
-     * @param fromNum
-     * @param topNum
-     * @param numVal
-     * @return
-     */
     public static String convertUnitNumber(Integer fromNum, Integer topNum, Long numVal) {
+        return convertUnitNumber(fromNum, topNum, numVal, defaultSkips, 12);
+    }
+    //[fromNum, topNum]
+    public static String convertUnitNumber(Integer fromNum, Integer topNum, Long numVal, List<Integer> skips, int remainderIgnoreFrom) {
         if(numVal == null || numVal <= 0) return "0";
-        Integer p = topNum<0?4:topNum;
+
+        Integer p = topNum;
         String retVal = numVal + "";
         for(; p>=fromNum; p--) {
-            Integer bian = pow10(p);
+            if(skips.contains(p) || !CONV.containsKey(p)) continue;
+
+            Long bian = pow10(p);
             if(bian <= numVal) {
                 Long zs = numVal / bian;
                 retVal = zs + "";
-                if(p >= 1) {
-                    Long remainder = remainder(numVal % bian, p - 1);
-                    if(remainder != -1) {
-                        retVal += "." + remainder;
+
+                if(p > 0 && p < remainderIgnoreFrom) {
+                    Long remain = remainder(numVal % bian, p - 1);
+                    if (remain != -1) {
+                        retVal += "." + remain;
                     }
-                    retVal += CONV.get(p);
                 }
+
+                retVal += CONV.get(p);
                 break;
             }
         }
         return retVal;
     }
+
     private static Long remainder(Long numRemain, Integer p) {
-        if(numRemain >= pow10(p)) {
-            return numRemain / pow10(p);
+        Long pow = pow10(p);
+        if(numRemain >= pow) {
+            return numRemain / pow;
         } else {
             return -1L;
         }
     }
-    private static Integer pow10(int num) {
-        return Double.valueOf(Math.pow(10, num)).intValue();
+    private static Long pow10(int num) {
+        return Double.valueOf(Math.pow(10, num)).longValue();
     }
 
-
     /**
-     * 将Number对象转化为指定的Number子类型
-     * 通常情况"小类型"转换成"大类型",no p
-     * "大类型"转换成"小类型",如果"大类型"未超过"小类型"的范围,no p
-     *eg: NumberUnitUtils.convertNumberToTargetClazz(1, Integer.class, true);  //Integer to Integer
-     *    NumberUnitUtils.convertNumberToTargetClazz(1123L, Integer.class, true);  //Long to Integer
-     *    NumberUnitUtils.convertNumberToTargetClazz(123, Long.class, true);  //Integer to Long
-     *    NumberUnitUtils.convertNumberToTargetClazz(new BigInteger("1234"), Long.class, true);  //BigInteger to Long
-     *    NumberUnitUtils.convertNumberToTargetClazz(new BigDecimal("1234.345"), Long.class, true);  //BigDecimal to Long
-     * @param number Number对象
-     * @param clazz Number子类型的Class
-     * @param checkBorder true:对clazz进行边界检查,如果超过边界,抛异常;false:不边界检查,如果number的数值超过clazz类型的边界,将发生截断,导致值不可预料
-     * @return
+     *Number类型之间相互转换
+     *继承Number的子类型(标准库)有: Byte,Short,Integer,Long,BigInteger,Float,Double,BigDecimal
+     *
+     *
+     *整数补码的截断与补值 (整数的强制类型转换，eg:byte i = (short) 128)
+     * 0:      0000 0000                0000 0000 | 0000 0000
+     * 1:      0000 0001                0000 0000 | 0000 0001
+     * 127:    0111 1111                0000 0000 | 0111 1111
+     *
+     * -1:     1111 1111                1111 1111 | 1111 1111
+     * -126:   1000 0010                1111 1111 | 1000 0010
+     * -127:   1000 0001                1111 1111 | 1000 0001
+     * -128: 1 1000 0000                1111 1111 | 1000 0000
+     *1.大 -> 小， 补码截断，当数值未超过"小类型"的边界时，可以得到正确的数值
+     *2.小 -> 大， 正数-补0;负数-补1，可以得到正确的数值
+     *
+     *
+     *number转换成整数(Byte,Short,Integer,Long)
+     * 1.number是整数，eg Long#intValue
+     *   当number数值未超过target的边界时，得到正确的数值。当number数值超过target的边界时，抛异常
+     *
+     * 2.BigInteger转换成整数: BigInteger#byteValue,#shortValue,#intValue,#longValue
+     *   当数值未超界时，可以得到正确的数值。当数值超界时，抛异常
+     * 3.BigDecimal转换成整数: BigDecimal#toBigInteger
+     *   得到精确的整数部分
+     *
+     * 4.浮点数强制转换成整数: 浮点数的存储 {@link com.fresh.common.flt.FloatTest}
+     *   取该浮点数在浮点数表中对应值的整数部分（不一定精确）
+     *
+     *
+     *number转换成BigInteger
+     * 1.BigDecimal转换成BigInteger: BigDecimal#toBigInteger
+     * 2.整数转换成BigInteger:   BigInteger完全能容纳
+     * 3.浮点数转换成BigInteger: 取该浮点数在浮点数表中对应值的整数部分（不一定精确），取出的整数部分如果超过long,将发生截断
+     *
+     *
+     *number转换成BigDecimal
+     * 1.BigInteger转换成BigDecimal，小数部分为0
+     * 2.整数转换成BigDecimal，小数部分为0
+     * 3.浮点数转换成BigDecimal，取该浮点数在浮点数表中对应值（不一定精确）构造BigDecimal，非精确
+     *
+     *
+     *number转换成浮点数
+     * 1.number是浮点数，大->小且超界undefined
+     * 2.整数转换成浮点数: Float#valueOf, Long的最大值不超过Float
+     * 3.BigInteger转换成浮点数: 超界undefined
+     * 4.BigDecimal转换成浮点数: 超界undefined
+     *
+     *
+     * @param number Number类型的源对象
+     * @param targetClazz 目标类型
+     * @return 转换后的值
      */
-    public static <T extends Number> T convertNumberToTargetClazz(Number number, Class<T> clazz, boolean checkBorder) {
+    public static <T extends Number> T convertNumberToTargetClazz(Number number, Class<T> targetClazz) {
         AssertUtils.ifTrue(number==null, () -> "参数number[Number]不能为空", null);
-        AssertUtils.ifTrue(clazz==null, () -> "参数clazz[Class]不能为空", null);
+        AssertUtils.ifTrue(targetClazz==null, () -> "参数clazz[Class]不能为空", null);
 
-        if(clazz.isInstance(number)) {
+        if(targetClazz.isInstance(number)) {
             return (T) number;
-        } else if(Byte.class == clazz || Byte.TYPE == clazz) {
-            if(checkBorder) {
-                long l = resolveLongValue(number, clazz);
-                if(l < Byte.MIN_VALUE || l > Byte.MAX_VALUE) {
-                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+clazz.getName()+"]允许的最大值", null);
-                }
-            }
+        } else if(Byte.class == targetClazz || Byte.TYPE == targetClazz) {
+            long l = resolveLongValue(number, targetClazz);
+            AssertUtils.isTrue(l >= Byte.MIN_VALUE && l <= Byte.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
             return (T) Byte.valueOf(number.byteValue());
-        } else if(Short.class == clazz || Short.TYPE == clazz) {
-            if(checkBorder) {
-                long l = resolveLongValue(number, clazz);
-                if (l < Short.MIN_VALUE || l > Short.MAX_VALUE) {
-                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+clazz.getName()+"]允许的最大值", null);
-                }
-            }
+        } else if(Short.class == targetClazz || Short.TYPE == targetClazz) {
+            long l = resolveLongValue(number, targetClazz);
+            AssertUtils.isTrue(l >= Short.MIN_VALUE && l <= Short.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
             return (T) Short.valueOf(number.shortValue());
-        } else if(Integer.class == clazz || Integer.TYPE == clazz) {
-            if(checkBorder) {
-                long l = resolveLongValue(number, clazz);
-                if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
-                    AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+clazz.getName()+"]允许的最大值", null);
-                }
-            }
+        } else if(Integer.class == targetClazz || Integer.TYPE == targetClazz) {
+            long l = resolveLongValue(number, targetClazz);
+            AssertUtils.isTrue(l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
             return (T) Integer.valueOf(number.intValue());
-        } else if(Long.class == clazz || Long.TYPE == clazz) {
-            long l = resolveLongValue(number, clazz);
+        } else if(Long.class == targetClazz || Long.TYPE == targetClazz) {
+            long l = resolveLongValue(number, targetClazz);
             return (T) Long.valueOf(l);
-        } else if(BigInteger.class == clazz) {
+        } else if(BigInteger.class == targetClazz) {
             if(number instanceof  BigDecimal) {
                 return (T) ((BigDecimal) number).toBigInteger();
             } else {
                 return (T) BigInteger.valueOf(number.longValue());
             }
-        } else if(Float.class == clazz || Float.TYPE == clazz) {
+        } else if(Float.class == targetClazz || Float.TYPE == targetClazz) {
             return (T) Float.valueOf(number.floatValue());
-        } else if(Double.class == clazz || Double.TYPE == clazz) {
+        } else if(Double.class == targetClazz || Double.TYPE == targetClazz) {
             return (T) Double.valueOf(number.doubleValue());
-        } else if(BigDecimal.class == clazz) {
+        } else if(BigDecimal.class == targetClazz) {
             return (T) new BigDecimal(number.toString());
         } else {
-            AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]不能转化为"+clazz.getName(), null);
+            AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]不能转化为"+targetClazz.getName(), null);
         }
         return null;
     }
@@ -150,16 +212,18 @@ public abstract class NumberUnitUtils {
         return number.longValue();
     }
 
-    public static void main(String argv[]) {
-        int result1 = NumberUnitUtils.convertNumberToTargetClazz(123, int.class, true);
-        int result2 = NumberUnitUtils.parseTextToTargetNumber("0x123", Integer.class);
-
-
-        System.out.println(1);
-    }
-
     /**
-     * 将字符串形式的数值转化为指定类型
+     *将字符串形式的数值转化为指定Number
+     *继承Number的子类型(标准库)有: Byte,Short,Integer,Long,BigInteger,Float,Double,BigDecimal
+     *16进制整数前缀: 0x,0X,#
+     *
+     *转换成整数
+     * text表示的数值超界或者格式不能解析时，NumberFormatException
+     *转换成BigInteger，BigDecimal
+     * text格式不能解析时，NumberFormatException
+     *转换成浮点数
+     * text表示的数值超界时undefined, text格式不能解析时，NumberFormatException
+     *
      * @param text
      * @param clazz
      * @param <T>
@@ -197,10 +261,12 @@ public abstract class NumberUnitUtils {
         int radix = 10;
         int index = 0;
 
-        if (value.startsWith("-")) {
-            index++;
+        char firstChar = value.charAt(0);
+        if (firstChar == '-') {
             negative = true;
-        }
+            index++;
+        } else if (firstChar == '+')
+            index++;
 
         if (value.startsWith("0x", index) || value.startsWith("0X", index)) {
             radix = 16;
@@ -218,10 +284,12 @@ public abstract class NumberUnitUtils {
         return (negative ? result.negate() : result);
     }
 
-    public static <T extends Number> T convert(Object o, Class<T> clazz) {
-        AssertUtils.ifTrue(o==null, () -> "参数o不能为空", null);
+
+    public static <T extends Number> T convertToNumber(Object o, Class<T> clazz) {
+        //AssertUtils.notNull(o, "参数o不能为空");
+
         if(o instanceof Number) {
-            return convertNumberToTargetClazz((Number)o, clazz, true);
+            return convertNumberToTargetClazz((Number)o, clazz);
         }
         if(o instanceof String) {
             return parseTextToTargetNumber((String)o, clazz);
@@ -229,12 +297,11 @@ public abstract class NumberUnitUtils {
         return null;
     }
 
-    public static <T extends Number> T convert(Object o, Class<T> clazz, T defaultValue) {
-        AssertUtils.ifTrue(defaultValue==null, () -> "参数defaultValue不能为空", null);
-        if(o == null) {
-            return defaultValue;
-        }
-        return convert(o, clazz);
+    public static <T extends Number> T convertToNumber(Object o, Class<T> clazz, T defaultValue) {
+        T value = convertToNumber(o, clazz);
+
+        if (value != null) return value;
+        else return defaultValue;
     }
 
     /**

@@ -47,14 +47,16 @@ public abstract class StringUtils {
     }
 
     /**
-     * 是否带有进制
+     * 是否是16进制
      * @param str
      * @return
      */
     public static boolean isHexNumber(String str) {
+        if(str == null) return false;
         int index = (str.startsWith("-") ? 1 : 0);
         return (str.startsWith("0x", index) || str.startsWith("0X", index) || str.startsWith("#", index));
     }
+
 
     /**
      * 如果参数str不为null并且length>0,则返回true
