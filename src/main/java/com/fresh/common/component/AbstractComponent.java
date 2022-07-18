@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @see Leaf
  * @see Composite
- * @param <T>
+ * @param <T> 泛型参数
  */
 public abstract class AbstractComponent<T> implements Component<T> {
 

@@ -24,7 +24,7 @@ import java.util.List;
  *           "pages": 1
  *       }
  *   }
- * @param <T>
+ * @param <T> 数据的类型
  */
 @Data
 @Accessors(chain = true)

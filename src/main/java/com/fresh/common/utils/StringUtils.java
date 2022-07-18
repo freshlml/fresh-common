@@ -11,7 +11,7 @@ public abstract class StringUtils {
     private static final String CLASS_SUFFIX = "class";
 
 
-    /**
+    /*
      * 将className 转化为 classpath
      * eg:
      *     com.sc.common.vo.JsonResult   ->  com/sc/common/vo/JsonResult.class
@@ -28,7 +28,7 @@ public abstract class StringUtils {
         return classpath;
     }
 
-    /**
+    /*
      * 将classpath 转化为 className
      * eg:
      *      com/sc/common/vo/JsonResult.class  ->  com.sc.common.vo.JsonResult
@@ -47,7 +47,7 @@ public abstract class StringUtils {
         return classpath.replace(PATH_SEP, PACKAGE_SEP);
     }
 
-    /**
+    /*
      * 是否是16进制
      * @param str
      * @return
@@ -59,7 +59,7 @@ public abstract class StringUtils {
     }
 
 
-    /**
+    /*
      * 如果参数str不为null并且length>0,则返回true
      * @param str
      * @return
@@ -68,7 +68,7 @@ public abstract class StringUtils {
         return str!=null && str.length()>0;
     }
 
-    /**
+    /*
      * 去除所有whitespace
      * @param str
      * @return
@@ -89,7 +89,7 @@ public abstract class StringUtils {
     }
 
 
-    /**
+    /*
      * Check whether the given object (possibly a {@code String}) is empty.
      * <p>This method accepts any Object as an argument, comparing it to
      * {@code null} and the empty String. As a consequence, this method

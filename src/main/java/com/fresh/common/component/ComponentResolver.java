@@ -13,19 +13,19 @@ public interface ComponentResolver<T> {
 
     /**
      * 是否是叶子节点
-     * @return
+     * @return true or false
      */
     boolean isLeaf();
 
     /**
      * 获取当前的节点信息
-     * @return
+     * @return T
      */
     T getInfo();
 
     /**
      * 获取子节点
-     * @return
+     * @return childs
      */
     List<Component<T>> getChilds();
 

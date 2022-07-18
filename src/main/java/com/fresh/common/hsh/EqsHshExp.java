@@ -21,7 +21,7 @@ public class EqsHshExp {
         this.cools = cools;
     }
 
-    /**
+    /*
      *相等性比较运算符:
      * 1、 ==, 比较变量内存存储值
      *   a: primitive变量存储的二进制值就代表其本身，int i=1; //变量i,类型是int,本地栈空间存整数1的二进制值
@@ -34,7 +34,7 @@ public class EqsHshExp {
      *      }
      */
 
-    /**
+    /*
      * equals重写的模板样例
      *  1. x.equals(x)
      *  2. o is null; return false
@@ -71,7 +71,7 @@ public class EqsHshExp {
         return flag;
     }
 
-    /**
+    /*
      * note1: 如果equals，则hashCode一定相等
      * 计算方法: 取equals中用到的若干字段计算hashcode值并将这些值按照一定规则组合起来
      *         Object中hashCode默认实现满足: Object.equals返回相等，则Object.hashCode也返回相同的int值

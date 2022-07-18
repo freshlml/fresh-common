@@ -7,19 +7,19 @@ import java.util.List;
  * @see AbstractComponent
  * @see Leaf
  * @see Composite
- * @param <T>
+ * @param <T> 泛型参数
  */
 public interface Component<T> {
 
     /**
      * 获取当前的节点信息
-     * @return
+     * @return 节点信息
      */
     T getInfo();
 
     /**
      * 获取子节点
-     * @return
+     * @return childs
      */
     List<Component<T>> getChilds();
 

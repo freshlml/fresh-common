@@ -2,130 +2,128 @@ package com.fresh.common.chr;
 
 import java.nio.charset.Charset;
 
+/**
+ *第一: unicode码/unicode字符集
+ *  unicode码的概念: 对世界上所有可能出现的字符，分配一个唯一的数字值表示;
+ *                 unicode字符集只是规定字符的数字值，而没有规定数字值的存储格式
+ *
+ *  码点(code point): unicode字符集中某个字符对应的数字值,目前unicode的码点范围为 U+0000 ~ U+10FFFF，共1114112个码点,1 0000 1111 1111 1111 1111（21个比特位）
+ *
+ *  代码级别(code plane): U+0000 ~ U+10FFFF范围内的1114112个码点, 按每2^16(65536)个值分成一组，总共可以分成17份，每一份叫做一个代码级别
+ *                      如第一个代码级别的码点范围: U+0000 ~ U+FFFF
+ *      plane0      [U+0000,   U+FFFF]    BMP(basic multilingual plane)[基础多语言plane]
+ *      plane1      [U+10000,  U+1FFFF]   SMP(supplementary multilingual plane)[补充多语言plane]
+ *      plane2      [U+20000,  U+2FFFF]   SIP(supplementary ideographic plane)[补充表意语言plane]
+ *      plane3      [U+30000,  U+3FFFF]   TIP(tertiary ideographic plane)[第三表意语言plane]
+ *      plane4-13   [U+40000,  U+DFFFF]   预留
+ *      plane14     [U+E0000,  U+EFFFF]   SSP(supplementary special-purpose plane)[补充特殊用途plane]
+ *      plane15     [U+F0000,  U+FFFFF]   SPUA-A(supplementary private user area-a plane)[补充私有用途plane]
+ *      plane16     [U+100000, U+10FFFF]  APUS-B(supplementary private user area-b plane)[补充私有用途plane]
+ *
+ *  问题: 为什么当前unicode码点的最大值为U+10FFFF???
+ *       高位代理和低位代理能组合出1048576个数字 + 65536 = 1114112，即U+10FFFF
+ *
+ *  高位代理和低位代理:
+ *      [U+10000, U+10FFFF]范围，共1,048,576个数字
+ *      plane0的 [U+D800, U+DBFF]  作为高位代理, 这个范围共1024个数字
+ *      plane0的 [U+DC00, U+DFFF]  作为低位代理, 这个范围共1024个数字
+ *      高位代理、低位代理总共能够代理的数字个数: 1024*1024 = 2^20 = 1048576，恰好够表示[U+10000, U+10FFFF]范围
+ *
+ *
+ *  块(block):
+ *      C0 Controls and Basic Latin block:            [U+0000, U+007F],  即从ASCII继承过来的128个字符
+ *      CJK Unified Ideographs block:                 [U+4E00, U+9FFC],  包含大部分的中日韩文字
+ *      Halfwidth and Fullwidth Forms block:          [U+FF00, U+FFEF],  用于英文字母/数字/日文/个别符号等一些字符的全角-半角相互转换
+ *      Miscellaneous Symbols and Pictographs block:  [U+1F300, U+1F5FF], emoji表情
+ *      Supplemental Symbols and Pictographs block:   [U+1F900, U+1F9FF], emoji表情
+ *
+ *
+ *
+ *
+ *第二: UTF编码
+ *  UTF: unicode transformation format
+ *    unicode码点的存储格式
+ *    存储存的是二进制、网络传输中传递的是二进制
+ *    unicode规定了字符的码点，码点使用utf编码转化为二进制，这样字符就可以用于存储和传输了
+ *
+ *  UTF-8
+ *      [U+0, U+007F] 一个字节存储， (U+007F, U+07FF] 两个字节存储，(U+07FF, U+FFFF] 三个字节存储，(U+FFFF, U+10FFFF] 四个字节存储
+ *
+ *      [U+0, U+007F], [0000 0000, 0111 1111], 最多7个比特位，取码点存储在一个字节，最高位为0，兼容ASCII
+ *
+ *      (U+007F, U+07FF] [0000 0000 1000 0000, 0000 0111 1111 1111]，最多11个比特位，取码点存储在两个字节，110x xxxx 10xx xxxx，最高位为11表示使用两个字节存储,10表示是多字节中的一个字节，x保存具体的码点二进制值
+ *
+ *      (U+07FF, U+FFFF] [0000 0000 0000 1000 1111 1111, 0000 0000 1111 1111 1111 1111]，最多16个比特位，取码点存储在三个字节，1110 xxxx 10xx xxxx 10xx xxxx，最高位111表示用三个字节存储,10表示是多字节中的一个字节，x保存具体的码点二进制值
+ *
+ *      (U+FFFF, U+10FFFF] [0000 0000 0001 0000 0000 0000 0000, 0001 0000 1111 1111 1111 1111]，最多21个比特位，取码点存储在四个字节，1111 0xxx 10xx xxxx 10xx xxxx 10xx xxxx，最高位1111表示用四个字节存储,10表示是多字节中的一个字节，x保存具体的码点二进制值
+ *
+ *      多个字节时，每个字节以10开头、110开头、1110开头、1111开头，因此每个字节都比U+7f(127)大，而0-127为ASKII，这应该是有意为之
+ *
+ *  UTF-16
+ *      [U+0, U+FFFF] 两个字节存储，(U+FFFF, U+10FFFF] 四个字节存储
+ *
+ *      [U+0000, U+D700] 和 [U+E000, U+FFFF]直接使用码点作为存储值。中间的[U+D800, U+DBFF]作为高位代理、[U+DC00, U+DFFF]作为低位代理
+ *      [U+10000, U+10FFFF], 使用高位代理和低位代理存储:
+ *        1、令 y = x - U+10000,x∈[U+10000, U+10FFFF]，则y∈[U+0, U+FFFFF]
+ *        2、y(max) = U+FFFFF，转化为二进制为: 1111 1111 1111 1111 1111，共计20个比特位
+ *        3、将y的比特位取出低十位(不够,高位补0)，作为w2， w2∈[U+0, U+3FF]
+ *           令 p = w2 + U+DC00, w2∈[U+0, U+3FF]，p∈[U+DC00, U+DFFF]
+ *           p的范围恰好是低位代理的范围
+ *        4、将y的比特位取出高十位(不够,高位补0)，作为w1， w1∈[U+0, U+3FF]
+ *           令 q = w1 = U+D800, w2∈[U+0, U+3FF]，p∈[U+D800, U+DBFF]
+ *           q的范围恰好是高位代理的范围
+ *
+ *       UTF-16中两个字节为一个代码单元(code unit)
+ *           当码点∈[U+0, U+FFFF]时，一个代码单元即可表示,代码单元存码点
+ *           当码点∈(U+FFFF, U+10FFFF]时，要使用两个代码单元表示,其中第一个代码单元存高位代理值(根据码点计算出来的),第二个代码单元存低位代理值(根据码点计算出来的)
+ *
+ *     eg  x = U+1D546
+ *       y = x - U+10000 = U+1D546 - U+10000 = U+D546, 1101 0101 0100 0110
+ *       w2 = 01 0100 0110，p = w2 + U+DC00 = U+146 + U+DC00 = U+DD46
+ *       w1 = 0000 1101 01，q = w1 + U+D800 = U+35 + U+D800 = U+D835
+ *
+ *tool: https://tool.oschina.net/hexconvert/
+ *
+ *  UTF-32
+ *      [U+0, U+10FFFF] 四个字节定长存储
+ *      空间浪费，在网络传输时效率低
+ *
+ * Byte order mark
+ * 小字节序: 如            0xff 0xfe 0x2d 0x4e
+ *      小字节序开头两个字节0xff 0xfe,后续字节需要转换顺序: 0x4e 0x2d
+ * 大字节序: 如            0xfe 0xff 0x4e 0x2d
+ *      大字节序开头两个字节0xfe 0xff,后续字节无需转换顺序: 0x4e 0x2d
+ *
+ * UTF-16BE: UTF-16大字节序            0xfe 0xff
+ * UTF-16LE: UTF-16小字节序            0xff 0xfe
+ * UTF-32BE: UTF-32大字节序            0x00 0x00 0xfe 0xff
+ * UTF-32LE: UTF-32小字节序            0xff 0xfe 0x00 0x00
+ *
+ * UTF-8理论上可以不用BOM，但是某些windows应用如notepad++,它支持给UTF-8加上BOM,excel中会根据字节序列的开头是不是0xef 0xbb 0xbf来判断是否是UTF-8字节序列
+ *  UTF-8	  0xef 0xbb 0xbf
+ *
+ * java中，使用utf-8编码时，不添加bom
+ *        使用utf-16时，默认使用大字节序并添加bom
+ *        使用utf-16be时，使用大字节序但不添加bom
+ *        使用utf-16le时，使用小字节序但不添加bom
+ *
+ *
+ *第三: java中char类型
+ *  char表示UTF-16中的一个代码单元，一个代码单元2个字节，所以说char两个字节也没毛病
+ *      1、unicode字符的码点∈[U+0, U+FFFF]时
+ *        一个char(一个代码单元)存储该unicode字符的码点
+ *      2、unicode字符的码点∈(U+FFFF, U+10FFFF]时
+ *        char[2](两个代码单元)分别存储高位代理、低位代理
+ *
+ *  char类型不建议使用
+ *     eg: 数据库中存𝕆，如果entity用char c; 就乱了
+ *                    应该使用String str; 但要注意此时str中的char[]长度为2，即高位代理和低位代理
+ *
+ *  String中final char[] value;
+ */
 public class CharTest {
 
-    /**
-     *第一: unicode码/unicode字符集
-     *  unicode码的概念: 对世界上所有可能出现的字符，分配一个唯一的数字值表示;
-     *                 unicode字符集只是规定字符的数字值，而没有规定数字值的存储格式
-     *
-     *  码点(code point): unicode字符集中某个字符对应的数字值,目前unicode的码点范围为 U+0000 ~ U+10FFFF，共1114112个码点,1 0000 1111 1111 1111 1111（21个比特位）
-     *
-     *  代码级别(code plane): U+0000 ~ U+10FFFF范围内的1114112个码点, 按每2^16(65536)个值分成一组，总共可以分成17份，每一份叫做一个代码级别
-     *                      如第一个代码级别的码点范围: U+0000 ~ U+FFFF
-     *      plane0      [U+0000,   U+FFFF]    BMP(basic multilingual plane)[基础多语言plane]
-     *      plane1      [U+10000,  U+1FFFF]   SMP(supplementary multilingual plane)[补充多语言plane]
-     *      plane2      [U+20000,  U+2FFFF]   SIP(supplementary ideographic plane)[补充表意语言plane]
-     *      plane3      [U+30000,  U+3FFFF]   TIP(tertiary ideographic plane)[第三表意语言plane]
-     *      plane4-13   [U+40000,  U+DFFFF]   预留
-     *      plane14     [U+E0000,  U+EFFFF]   SSP(supplementary special-purpose plane)[补充特殊用途plane]
-     *      plane15     [U+F0000,  U+FFFFF]   SPUA-A(supplementary private user area-a plane)[补充私有用途plane]
-     *      plane16     [U+100000, U+10FFFF]  APUS-B(supplementary private user area-b plane)[补充私有用途plane]
-     *
-     *  问题: 为什么当前unicode码点的最大值为U+10FFFF???
-     *       高位代理和低位代理能组合出1048576个数字 + 65536 = 1114112，即U+10FFFF
-     *
-     *  高位代理和低位代理:
-     *      [U+10000, U+10FFFF]范围，共1,048,576个数字
-     *      plane0的 [U+D800, U+DBFF]  作为高位代理, 这个范围共1024个数字
-     *      plane0的 [U+DC00, U+DFFF]  作为低位代理, 这个范围共1024个数字
-     *      高位代理、低位代理总共能够代理的数字个数: 1024*1024 = 2^20 = 1048576，恰好够表示[U+10000, U+10FFFF]范围
-     *
-     *
-     *  块(block):
-     *      C0 Controls and Basic Latin block:            [U+0000, U+007F],  即从ASCII继承过来的128个字符
-     *      CJK Unified Ideographs block:                 [U+4E00, U+9FFC],  包含大部分的中日韩文字
-     *      Halfwidth and Fullwidth Forms block:          [U+FF00, U+FFEF],  用于英文字母/数字/日文/个别符号等一些字符的全角-半角相互转换
-     *      Miscellaneous Symbols and Pictographs block:  [U+1F300, U+1F5FF], emoji表情
-     *      Supplemental Symbols and Pictographs block:   [U+1F900, U+1F9FF], emoji表情
-     *
-     *
-     *
-     *
-     *第二: UTF编码
-     *  UTF: unicode transformation format
-     *    unicode码点的存储格式
-     *    存储存的是二进制、网络传输中传递的是二进制
-     *    unicode规定了字符的码点，码点使用utf编码转化为二进制，这样字符就可以用于存储和传输了
-     *
-     *  UTF-8
-     *      [U+0, U+007F] 一个字节存储， (U+007F, U+07FF] 两个字节存储，(U+07FF, U+FFFF] 三个字节存储，(U+FFFF, U+10FFFF] 四个字节存储
-     *
-     *      [U+0, U+007F], [0000 0000, 0111 1111], 最多7个比特位，取码点存储在一个字节，最高位为0，兼容ASCII
-     *
-     *      (U+007F, U+07FF] [0000 0000 1000 0000, 0000 0111 1111 1111]，最多11个比特位，取码点存储在两个字节，110x xxxx 10xx xxxx，最高位为11表示使用两个字节存储,10表示是多字节中的一个字节，x保存具体的码点二进制值
-     *
-     *      (U+07FF, U+FFFF] [0000 0000 0000 1000 1111 1111, 0000 0000 1111 1111 1111 1111]，最多16个比特位，取码点存储在三个字节，1110 xxxx 10xx xxxx 10xx xxxx，最高位111表示用三个字节存储,10表示是多字节中的一个字节，x保存具体的码点二进制值
-     *
-     *      (U+FFFF, U+10FFFF] [0000 0000 0001 0000 0000 0000 0000, 0001 0000 1111 1111 1111 1111]，最多21个比特位，取码点存储在四个字节，1111 0xxx 10xx xxxx 10xx xxxx 10xx xxxx，最高位1111表示用四个字节存储,10表示是多字节中的一个字节，x保存具体的码点二进制值
-     *
-     *      多个字节时，每个字节以10开头、110开头、1110开头、1111开头，因此每个字节都比U+7f(127)大，而0-127为ASKII，这应该是有意为之
-     *
-     *  UTF-16
-     *      [U+0, U+FFFF] 两个字节存储，(U+FFFF, U+10FFFF] 四个字节存储
-     *
-     *      [U+0000, U+D700] 和 [U+E000, U+FFFF]直接使用码点作为存储值。中间的[U+D800, U+DBFF]作为高位代理、[U+DC00, U+DFFF]作为低位代理
-     *      [U+10000, U+10FFFF], 使用高位代理和低位代理存储:
-     *        1、令 y = x - U+10000,x∈[U+10000, U+10FFFF]，则y∈[U+0, U+FFFFF]
-     *        2、y(max) = U+FFFFF，转化为二进制为: 1111 1111 1111 1111 1111，共计20个比特位
-     *        3、将y的比特位取出低十位(不够,高位补0)，作为w2， w2∈[U+0, U+3FF]
-     *           令 p = w2 + U+DC00, w2∈[U+0, U+3FF]，p∈[U+DC00, U+DFFF]
-     *           p的范围恰好是低位代理的范围
-     *        4、将y的比特位取出高十位(不够,高位补0)，作为w1， w1∈[U+0, U+3FF]
-     *           令 q = w1 = U+D800, w2∈[U+0, U+3FF]，p∈[U+D800, U+DBFF]
-     *           q的范围恰好是高位代理的范围
-     *
-     *       UTF-16中两个字节为一个代码单元(code unit)
-     *           当码点∈[U+0, U+FFFF]时，一个代码单元即可表示,代码单元存码点
-     *           当码点∈(U+FFFF, U+10FFFF]时，要使用两个代码单元表示,其中第一个代码单元存高位代理值(根据码点计算出来的),第二个代码单元存低位代理值(根据码点计算出来的)
-     *
-     *     eg  x = U+1D546
-     *       y = x - U+10000 = U+1D546 - U+10000 = U+D546, 1101 0101 0100 0110
-     *       w2 = 01 0100 0110，p = w2 + U+DC00 = U+146 + U+DC00 = U+DD46
-     *       w1 = 0000 1101 01，q = w1 + U+D800 = U+35 + U+D800 = U+D835
-     *
-     *tool: https://tool.oschina.net/hexconvert/
-     *
-     *  UTF-32
-     *      [U+0, U+10FFFF] 四个字节定长存储
-     *      空间浪费，在网络传输时效率低
-     *
-     * Byte order mark
-     * 小字节序: 如            0xff 0xfe 0x2d 0x4e
-     *      小字节序开头两个字节0xff 0xfe,后续字节需要转换顺序: 0x4e 0x2d
-     * 大字节序: 如            0xfe 0xff 0x4e 0x2d
-     *      大字节序开头两个字节0xfe 0xff,后续字节无需转换顺序: 0x4e 0x2d
-     *
-     * UTF-16BE: UTF-16大字节序            0xfe 0xff
-     * UTF-16LE: UTF-16小字节序            0xff 0xfe
-     * UTF-32BE: UTF-32大字节序            0x00 0x00 0xfe 0xff
-     * UTF-32LE: UTF-32小字节序            0xff 0xfe 0x00 0x00
-     *
-     * UTF-8理论上可以不用BOM，但是某些windows应用如notepad++,它支持给UTF-8加上BOM,excel中会根据字节序列的开头是不是0xef 0xbb 0xbf来判断是否是UTF-8字节序列
-     *  UTF-8	  0xef 0xbb 0xbf
-     *
-     * java中，使用utf-8编码时，不添加bom
-     *        使用utf-16时，默认使用大字节序并添加bom
-     *        使用utf-16be时，使用大字节序但不添加bom
-     *        使用utf-16le时，使用小字节序但不添加bom
-     *
-     *
-     *第三: java中char类型
-     *  char表示UTF-16中的一个代码单元，一个代码单元2个字节，所以说char两个字节也没毛病
-     *      1、unicode字符的码点∈[U+0, U+FFFF]时
-     *        一个char(一个代码单元)存储该unicode字符的码点
-     *      2、unicode字符的码点∈(U+FFFF, U+10FFFF]时
-     *        char[2](两个代码单元)分别存储高位代理、低位代理
-     *
-     *  char类型不建议使用
-     *     eg: 数据库中存𝕆，如果entity用char c; 就乱了
-     *                    应该使用String str; 但要注意此时str中的char[]长度为2，即高位代理和低位代理
-     *
-     *  String中final char[] value;
-     *
-     */
-
-    public static void main(String argv[]) throws Exception {
+    public static void main(String argv[]) {
         //11101010101000110
         //char使用两个字节存储，截断成1101010101000110，54598
         char c = (char) 120134;

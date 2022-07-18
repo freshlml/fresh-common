@@ -40,7 +40,7 @@ import java.util.List;
  *          }
  *      ]
  *  }
- *
+ * @param <T> 数据的类型
  */
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class JsonResult<T> {

@@ -11,7 +11,7 @@ public abstract class ObjectUtils {
     private static final String EMPTY_STRING = "";
     private static final String NULL_STRING = "null";
 
-    /**
+    /*
      * 比较 declared class(如primitive包装类型, String, 自定义class), 数组(primitive数组, declared class数组) 的相等性
      * @param o1
      * @param o2
@@ -27,7 +27,7 @@ public abstract class ObjectUtils {
         return false;
     }
 
-    /**
+    /*
      * 判断 primitive数组, declared class数组 的相等性
      * @param o1
      * @param o2

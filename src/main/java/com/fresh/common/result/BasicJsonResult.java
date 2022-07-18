@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * }
  *
  *
- * @param <T>
+ * @param <T> 数据类型
  */
 @Deprecated
 @JsonInclude(value= JsonInclude.Include.NON_NULL)

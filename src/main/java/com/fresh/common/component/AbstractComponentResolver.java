@@ -6,7 +6,7 @@ import java.util.Optional;
 
 /**
  * @see DefaultClazzComponentResolver
- * @param <T>
+ * @param <T> 泛型参数
  */
 public abstract class AbstractComponentResolver<T> implements ComponentResolver<T> {
 

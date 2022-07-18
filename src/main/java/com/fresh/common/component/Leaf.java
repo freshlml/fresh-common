@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 表示叶子节点
  * @see ClazzLeaf
- * @param <T>
+ * @param <T> 泛型参数
  */
 public class Leaf<T> extends AbstractComponent<T> {
 

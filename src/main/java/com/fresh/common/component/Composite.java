@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * 表示中间节点
  * @see ClazzComposite
- * @param <T>
+ * @param <T> 泛型参数
  */
 public class Composite<T> extends AbstractComponent<T> {
 

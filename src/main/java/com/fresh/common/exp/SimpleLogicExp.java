@@ -2,7 +2,7 @@ package com.fresh.common.exp;
 
 import java.util.function.Predicate;
 
-/**
+/*
  * provide a simple logic expression: & | !
  * using "()" to contains a sub-expression:  (p1 &p2 & (p2-1 | p2-2)) | ! p3 | (p4 ) | !(p5 & p6)
  * eg: {expression="p1 & p2 & p3"

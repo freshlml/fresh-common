@@ -8,8 +8,7 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * 实现EntityResolver，对dtd,xsd使用classpath加载
+/**实现EntityResolver，对dtd,xsd使用classpath加载
  */
 public class ClasspathEntityResolver implements EntityResolver {
 
@@ -40,18 +39,19 @@ public class ClasspathEntityResolver implements EntityResolver {
 
     /**
      * dtd
-     * <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-     * publicId="-//mybatis.org//DTD Mapper 3.0//EN" ; systemId="http://mybatis.org/dtd/mybatis-3-mapper.dtd"
+     * {@code <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+     *           publicId="-//mybatis.org//DTD Mapper 3.0//EN" ; systemId="http://mybatis.org/dtd/mybatis-3-mapper.dtd" }
+     * <br>
      * xsd
-     * <root ... xsi:schemaLocation="
-     *           http://www.fresh.com/namespace/roots
-     *           file:/D:\ideaProject\NormalProject\src\main\resources\validate_schema_test_2.xml1.xsd">
+     * {@code <root ... xsi:schemaLocation="
+     *                  http://www.fresh.com/namespace/roots
+     *                  file:/D:\ideaProject\NormalProject\src\main\resources\validate_schema_test_2.xml1.xsd">}
      * publicId=null ; systemId="file:/D:/ideaProject/NormalProject/src/main/resources/validate_schema_test_2.xml1.xsd"
-     * @param publicId
-     * @param systemId
-     * @return
-     * @throws SAXException
-     * @throws IOException
+     *
+     * @param publicId publicId
+     * @param systemId systemId
+     * @return InputSource
+     * @throws IOException IOException
      */
     @Override
     public InputSource resolveEntity(String publicId, String systemId) throws IOException {

@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 public abstract class AssertUtils {
 
-    /**
+    /*
      * 断定expression为true,如果expression不为true throw BizException
      * @param expression
      * @param message
@@ -15,7 +15,7 @@ public abstract class AssertUtils {
         isTrue(expression, () -> message, null);
     }
 
-    /**
+    /*
      * 断定expression为true,如果expression不为true throw BizException
      * @param expression
      * @param message
@@ -29,7 +29,7 @@ public abstract class AssertUtils {
         }
     }
 
-    /**
+    /*
      * 如果obj==null,throw BizException
      * @param obj
      * @param message
@@ -43,7 +43,7 @@ public abstract class AssertUtils {
         }
     }
 
-    /**
+    /*
      * 断定obj不为null，如果obj==null,throw BizException
      * @param obj
      * @param message
@@ -52,7 +52,7 @@ public abstract class AssertUtils {
         ifNull(obj, () -> message, null);
     }
 
-    /**
+    /*
      * 断定obj不为null，如果obj==null,抛异常
      * @param obj
      * @param message
@@ -64,7 +64,7 @@ public abstract class AssertUtils {
         ifNull(obj, message, exceptionCode);
     }
 
-    /**
+    /*
      * 如果expression为true, 抛异常
      * @param expression
      * @param message
@@ -73,7 +73,7 @@ public abstract class AssertUtils {
         ifTrue(expression, () -> message, null);
     }
 
-    /**
+    /*
      * 如果expression为true, 抛异常
      * @param expression
      * @param message

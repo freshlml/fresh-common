@@ -105,7 +105,7 @@ public abstract class NumberUnitUtils {
         return Double.valueOf(Math.pow(10, num)).longValue();
     }
 
-    /**
+    /*
      *Number类型之间相互转换
      *继承Number的子类型(标准库)有: Byte,Short,Integer,Long,BigInteger,Float,Double,BigDecimal
      *
@@ -212,7 +212,7 @@ public abstract class NumberUnitUtils {
         return number.longValue();
     }
 
-    /**
+    /*
      *将字符串形式的数值转化为指定Number
      *继承Number的子类型(标准库)有: Byte,Short,Integer,Long,BigInteger,Float,Double,BigDecimal
      *16进制整数前缀: 0x,0X,#
@@ -304,7 +304,7 @@ public abstract class NumberUnitUtils {
         else return defaultValue;
     }
 
-    /**
+    /*
      *
      * @param o
      * @throws NumberFormatException
@@ -316,7 +316,7 @@ public abstract class NumberUnitUtils {
         if(o instanceof Number) return ((Number) o).longValue();
         return Long.parseLong(String.valueOf(o));
     }
-    /**
+    /*
      *
      * @param o
      * @throws NumberFormatException
@@ -342,7 +342,7 @@ public abstract class NumberUnitUtils {
 
 
 
-    /**
+    /*
      * 向上取最接近的2^
      * @param n
      * @return

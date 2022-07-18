@@ -19,7 +19,7 @@ public abstract class ReflectUtils {
 ////
 //Constructor
 ////
-    /**
+    /*
      * 判断是否有public构造器
      * @see ReflectUtils#getConstructor
      * @param clazz
@@ -30,7 +30,7 @@ public abstract class ReflectUtils {
         return getConstructor(clazz, paramTypes) != null;
     }
 
-    /**
+    /*
      * packing Class.getConstructor
      * @see Class##getConstructor(Class, Class)
      * 获取Class的public构造器，if NoSuchMethodException return null
@@ -56,7 +56,7 @@ public abstract class ReflectUtils {
         }
     }
 
-    /**
+    /*
      * packing Class.getDeclaredConstructor
      * @see Class#getDeclaredConstructor(Class[])
      * 获取Class的构造器，and makeAccessible,if NoSuchMethodException return null
@@ -87,7 +87,7 @@ public abstract class ReflectUtils {
 ////
 //Method
 ////
-    /**
+    /*
      * packing Class.getMethod, {@link Class#getMethod} if NoSuchMethodException return null
      *
      * clazz参数不能为null,methodName参数不能为空,paramTypes不传，或者paramTypes=null,表示获取无参方法
@@ -117,7 +117,7 @@ public abstract class ReflectUtils {
         }
     }
 
-    /**
+    /*
      * packing Class.getDeclaredMethod,获取Class Object中的method,
      *
      * {@link Class#getDeclaredMethod} if NoSuchMethodException return null
@@ -140,7 +140,7 @@ public abstract class ReflectUtils {
         }
     }
 
-    /**
+    /*
      * check方法签名是否相同
      * @param left
      * @param right
@@ -151,7 +151,7 @@ public abstract class ReflectUtils {
         return left.getName().equals(right.getName()) && Arrays.equals(left.getParameterTypes(), right.getParameterTypes());
     }
 
-    /**
+    /*
      * 查找指定method, return null if not find
      * clazz参数不能为空，methodName参数不能为空
      *
@@ -208,7 +208,7 @@ public abstract class ReflectUtils {
         return results;
     }
 
-    /**
+    /*
      * Class Object是一个interface，通过Class.getMethods发现interface及其继承结构上的所有方法;采用BFS搜索继承结构中的static方法
      * 同时过滤掉bridge method
      * @param interfaceClazz
@@ -244,7 +244,7 @@ public abstract class ReflectUtils {
     }
 
 
-    /**
+    /*
      * 如果Class Object是一个interface,返回该Class Object和其继承结构的default,static方法
      *
      * 否则，在其getInterfaces()中查找default，static方法
@@ -276,7 +276,7 @@ public abstract class ReflectUtils {
     }
 
 
-    /**
+    /*
      * 查找所有的method
      * 参数clazz不能为空
      *
@@ -312,7 +312,7 @@ public abstract class ReflectUtils {
         }
     }
 
-    /**
+    /*
      * 查找所有的method
      * 参数clazz不能为空
      *
@@ -355,7 +355,7 @@ public abstract class ReflectUtils {
     }
 
 
-    /**
+    /*
      * methodPredicate,methodCallback
      * throws 抛出methodCallback执行时的任何异常
      * @param methods
@@ -386,7 +386,7 @@ public abstract class ReflectUtils {
 ////
 //Field
 ////
-    /**
+    /*
      * packing Class.getField {@link Class#getField} if NoSuchFieldException return null
      *
      * clazz参数不能为null,fieldName参数不能为空
@@ -406,7 +406,7 @@ public abstract class ReflectUtils {
         }
     }
 
-    /**
+    /*
      * 查找指定field
      * 查找顺序: 1.Class Object的declaredFields中查找，如果找不到，进行第2步
      *     2.在Class Object的interfaces中深度递归查找，如果找不到，进行第3步
@@ -424,7 +424,7 @@ public abstract class ReflectUtils {
         return findDeclaredField(clazz, field -> field.getName().equals(fieldName) && (fieldType == null || fieldType == field.getType()));
     }
 
-    /**@see ReflectUtils#findDeclaredField*/
+    /*@see ReflectUtils#findDeclaredField*/
     public static Field findDeclaredField(Class<?> clazz, Predicate<Field> predicate) {
         Field[] fields = clazz.getDeclaredFields();
         Optional<Field> found = Arrays.stream(fields).filter(predicate).findFirst();
@@ -444,7 +444,7 @@ public abstract class ReflectUtils {
         return null;
     }
 
-    /**
+    /*
      * 查找所有field
      *  查找范围: 1.Class Object的declaredFields
      *      2.在Class Object的interfaces中深度递归
@@ -459,7 +459,7 @@ public abstract class ReflectUtils {
         findDeclaredFieldConsumer(clazz, result::add);
         return result.toArray(new Field[0]);
     }
-    /**@see ReflectUtils#findAllDeclaredFields*/
+    /*@see ReflectUtils#findAllDeclaredFields*/
     public static void findDeclaredFieldConsumer(Class<?> clazz, Consumer<Field> consumer) {
         Field[] fields = clazz.getDeclaredFields();
         Arrays.stream(fields).forEach(consumer);

@@ -19,8 +19,8 @@ public class FlExceptionHandler {
 
     /**
      * Biz异常
-     * @param ex
-     * @return
+     * @param ex BizException对象
+     * @return JsonResult
      */
     @ExceptionHandler(BizException.class)
     @ResponseBody
@@ -33,8 +33,8 @@ public class FlExceptionHandler {
 
     /**
      * 参数校验异常
-     * @param ex
-     * @return
+     * @param ex izException对象
+     * @return JsonResult
      */
     @ExceptionHandler(BindException.class)
     @ResponseBody

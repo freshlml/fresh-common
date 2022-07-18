@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * 假定所有的namespace都定义在根元素
- */
 public class DefaultNamespaceResolver implements GenericNamespaceContext {
     private Document document;
     public static final String default_nx = "edx";//默认名称空间，xpath表达式使用此值

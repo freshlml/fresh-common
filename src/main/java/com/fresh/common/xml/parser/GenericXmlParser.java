@@ -82,14 +82,14 @@ public class GenericXmlParser {
 
     /**
      *
-     * @param xmlIn
-     * @param validation
-     * @param xsdValidation
+     * @param xmlIn xml
+     * @param validation 是否dtd校验
+     * @param xsdValidation 是否xsd校验
      * @param externalDTD  xml中有dtd，则设置为true
      * @param externalSCHEMA xml中有xsd，则设置为true
      * @param namespaceAware xml中使用了名称空间
      * @param entityResolver 如果需要自定义加载dtd ，xsd,则设置
-     * @param errorHandler
+     * @param errorHandler ErrorHandler
      */
     public GenericXmlParser(InputStream xmlIn,
                             boolean validation,

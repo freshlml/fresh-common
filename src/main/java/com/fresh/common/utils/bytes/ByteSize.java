@@ -29,7 +29,7 @@ public class ByteSize {
     /**
      *
      * @param bytes 字节数
-     * @return
+     * @return ByteSize
      */
     public static ByteSize ofBytes(long bytes) {
         return new ByteSize(bytes);
@@ -39,7 +39,7 @@ public class ByteSize {
      *
      * @param mount 多少个KB
      * @throws ArithmeticException if the mount * KB overflows a long
-     * @return
+     * @return ByteSize
      */
     public static ByteSize ofKBytes(long mount) {
         return new ByteSize(Math.multiplyExact(mount, KB));
@@ -49,7 +49,7 @@ public class ByteSize {
      *
      * @param mount 多少个MB
      * @throws ArithmeticException if the mount * MB overflows a long
-     * @return
+     * @return ByteSize
      */
     public static ByteSize ofMBytes(long mount) {
         return new ByteSize(Math.multiplyExact(mount, MB));
@@ -59,7 +59,7 @@ public class ByteSize {
      *
      * @param mount 多少个GB
      * @throws ArithmeticException if the mount * GB overflows a long
-     * @return
+     * @return ByteSize
      */
     public static ByteSize ofGBytes(long mount) {
         return new ByteSize(Math.multiplyExact(mount, GB));
@@ -69,7 +69,7 @@ public class ByteSize {
      *
      * @param mount 多少个TB
      * @throws ArithmeticException if the mount * TB overflows a long
-     * @return
+     * @return ByteSize
      */
     public static ByteSize ofTBytes(long mount) {
         return new ByteSize(Math.multiplyExact(mount, TB));
@@ -79,7 +79,7 @@ public class ByteSize {
      *
      * @param text
      * @throws IllegalArgumentException 当数值超过long
-     * @return
+     * @return ByteSize
      */
     public static ByteSize parse(CharSequence text) {
         return parse(text, null);
