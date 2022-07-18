@@ -1,4 +1,6 @@
-package com.fresh.common.component;
+package com.fresh.common.component.clazz;
+
+import com.fresh.common.component.Leaf;
 
 /**
  * Class类型的叶子节点

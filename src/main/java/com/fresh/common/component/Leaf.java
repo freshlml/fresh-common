@@ -1,5 +1,7 @@
 package com.fresh.common.component;
 
+import com.fresh.common.component.clazz.ClazzLeaf;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,14 +12,18 @@ import java.util.List;
  */
 public class Leaf<T> extends AbstractComponent<T> {
 
-    public Leaf(T info) {
-        super(info);
+    public Leaf(T entity) {
+        super(entity);
     }
     public Leaf() {}
 
     @Override
-    public List<Component<T>> getChilds() {
+    public List<Component<T>> getAllChild() {
         return new ArrayList<>();
     }
 
+    @Override
+    public void addChild(Component<T> child) {
+        //do nothing
+    }
 }

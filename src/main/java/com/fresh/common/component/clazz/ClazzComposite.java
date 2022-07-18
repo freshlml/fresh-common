@@ -1,4 +1,6 @@
-package com.fresh.common.component;
+package com.fresh.common.component.clazz;
+
+import com.fresh.common.component.Composite;
 
 /**
  * Class类型的中间节点

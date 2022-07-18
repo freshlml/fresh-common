@@ -1,5 +1,7 @@
 package com.fresh.common.component;
 
+import com.fresh.common.component.clazz.DefaultClazzComponentResolver;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,25 +20,30 @@ public abstract class AbstractComponentResolver<T> implements ComponentResolver<
 
     @Override
     public boolean isLeaf() {
-        return component.getChilds()==null || component.getChilds().size()==0;
+        return component.getAllChild()==null || component.getAllChild().size()==0;
     }
 
     @Override
-    public T getInfo() {
-        return component.getInfo();
+    public T getEntity() {
+        return component.getEntity();
     }
 
     @Override
-    public List<Component<T>> getChilds() {
-        return component.getChilds();
+    public List<Component<T>> getAllChild() {
+        return component.getAllChild();
     }
 
 
     public class EmptyComponent extends AbstractComponent<T> {
 
         @Override
-        public List<Component<T>> getChilds() {
+        public List<Component<T>> getAllChild() {
             return new ArrayList<>();
+        }
+
+        @Override
+        public void addChild(Component<T> child) {
+            //do nothing
         }
     }
 }

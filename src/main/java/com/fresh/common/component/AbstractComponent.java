@@ -1,7 +1,5 @@
 package com.fresh.common.component;
 
-import java.util.List;
-
 /**
  * @see Leaf
  * @see Composite
@@ -9,22 +7,17 @@ import java.util.List;
  */
 public abstract class AbstractComponent<T> implements Component<T> {
 
-    private T info;
+    private T entity;
 
-    public AbstractComponent(T info) {
-        //AssertUtils.ifNull(info, () -> "参数info不能为null", null);
-        this.info = info;
+    public AbstractComponent(T entity) {
+        //AssertUtils.ifNull(entity, () -> "参数entity不能为null", null);
+        this.entity = entity;
     }
     public AbstractComponent() {}
 
     @Override
-    public T getInfo() {
-        return info;
-    }
-
-    @Override
-    public List<Component<T>> getChilds() {
-        return null;
+    public T getEntity() {
+        return entity;
     }
 
 }

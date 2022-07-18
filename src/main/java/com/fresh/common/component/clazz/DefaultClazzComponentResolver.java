@@ -1,4 +1,7 @@
-package com.fresh.common.component;
+package com.fresh.common.component.clazz;
+
+import com.fresh.common.component.AbstractComponentResolver;
+import com.fresh.common.component.Component;
 
 import java.util.*;
 
@@ -19,16 +22,17 @@ public class DefaultClazzComponentResolver extends AbstractComponentResolver<Cla
     @Override
     public List<Class<?>> getAllSuperClass() {
         List<Class<?>> result = new ArrayList<>();
-        List<Component<Class<?>>> childs = component.getChilds();
+        List<Component<Class<?>>> childs = component.getAllChild();
         getAllSuperClass(result, childs);
         return result;
     }
 
     private void getAllSuperClass(List<Class<?>> listResult, List<Component<Class<?>>> childs) {
         for(Component<Class<?>> child : childs) {
-            if(!child.getInfo().isInterface()) {
-                listResult.add(child.getInfo());
-                getAllSuperClass(listResult, child.getChilds());
+            Class<?> entity = child.getEntity();
+            if(entity != null && !entity.isInterface()) {
+                listResult.add(entity);
+                getAllSuperClass(listResult, child.getAllChild());
                 break;
             }
         }
@@ -37,7 +41,7 @@ public class DefaultClazzComponentResolver extends AbstractComponentResolver<Cla
     @Override
     public List<Class<?>> getAllInterfaces() {
         List<Class<?>> result = new ArrayList<>();
-        List<Component<Class<?>>> childs = component.getChilds();
+        List<Component<Class<?>>> childs = component.getAllChild();
         Set<Class<?>> setLinked = getAllInterfacesBFS(childs);
         result.addAll(setLinked);
         return result;
@@ -48,10 +52,11 @@ public class DefaultClazzComponentResolver extends AbstractComponentResolver<Cla
         childs.forEach(queueList::offer);
         while(!queueList.isEmpty()) {
             Component<Class<?>> currentNode = queueList.poll();
-            if(currentNode.getInfo().isInterface()) {
-                listResult.add(currentNode.getInfo());
+            Class<?> entity = currentNode.getEntity();
+            if(entity != null && entity.isInterface()) {
+                listResult.add(entity);
             }
-            currentNode.getChilds().forEach(queueList::offer);
+            currentNode.getAllChild().forEach(queueList::offer);
         }
         return listResult;
     }

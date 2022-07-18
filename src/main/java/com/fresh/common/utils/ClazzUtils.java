@@ -1,6 +1,10 @@
 package com.fresh.common.utils;
 
 import com.fresh.common.component.*;
+import com.fresh.common.component.clazz.ClazzComponentResolver;
+import com.fresh.common.component.clazz.ClazzComposite;
+import com.fresh.common.component.clazz.ClazzLeaf;
+import com.fresh.common.component.clazz.DefaultClazzComponentResolver;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -81,9 +85,9 @@ public abstract class ClazzUtils {
         wrap2PrimitiveCache.put(Void.class, void.class);
     }
 
-    /*
+    /**
      * thread context ClassLoader; load ClazzUtils's ClassLoader; System ClassLoader; null
-     * @return
+     * @return ClassLoader
      */
     public static ClassLoader getDefaultClassLoader() {
         ClassLoader cl = null;
@@ -107,10 +111,10 @@ public abstract class ClazzUtils {
         return cl;
     }
 
-    /*
+    /**
      * 设置Thread的ClassLoader
-     * @param classLoader
-     * @return thread原来的ClassLoader或者null(没有reset该Thread的ClassLoader)
+     * @param classLoader ClassLoader
+     * @return thread原来的ClassLoader或者null if not set
      */
     public static ClassLoader resetThreadContextClassLoader(ClassLoader classLoader) {
         Thread currentThread = Thread.currentThread();
@@ -122,19 +126,21 @@ public abstract class ClazzUtils {
         return null;
     }
 
-    /*
-     * enhance Class.forName(...)
+    /**
+     * enhance Class.forName(...).
      * 如果是primitive, eg: className=int
      * 如果是array, eg: className=int[]; className=java.lang.Integer[]; className=com.sc.common.vo.JsonResult[]; className=[Lcom.sc.common.vo.JsonResult;
      * 如果是declared class,enum,interface,annotation
-     *    @see Class#forName(String, boolean, ClassLoader)
-     * @param className
-     * @param classLoader
-     * @exception ClassNotFoundException if the class cannot be located
+     *
+     * @see Class#forName(String, boolean, ClassLoader)
+     * @see ClazzUtilsTest
+     * @param className className
+     * @param classLoader ClassLoader
+     * @exception ClassNotFoundException if the class cannot be loaded
      * @return
      */
     public static Class<?> forName(String className, ClassLoader classLoader) throws ClassNotFoundException {
-        AssertUtils.ifNull(className, () -> "参数className不能为null", null);
+        AssertUtils.notNull(className, "参数className不能为null");
 
         if(isStringPrimitive(className)) {
             return resolvePrimitive(className);
@@ -166,22 +172,30 @@ public abstract class ClazzUtils {
         return primitiveTypeCache.get(className);
     }
 
-    /*
-     * enhance Class.isAssignableFrom(...)
-     * 如果参数left,right是primitive,则将之转化为其包装类型后在调用isAssignableFrom(...)
-     * note: array(primitive),eg int[].class, Integer[].class is not assignable
+    /**
+     * enhance Class.isAssignableFrom(...).<br>
+     * {@code Integer.class.isAssignableFrom(int.class)}调用返回false.
+     * {@code int.class.isAssignableFrom(Integer.class)}调用返回false.
+     * 使用如下方法，能够处理上述情况
+     *
      * @see Class#isAssignableFrom(Class)
-     * @param left
-     * @param right
-     * @return
+     * @see ClazzUtilsTest
+     * @param left left
+     * @param right right
+     * @return whether assignable
      */
     public static boolean isAssignableFrom(Class<?> left, Class<?> right) {
-        AssertUtils.ifNull(left, () -> "参数left不能为空", null);
-        AssertUtils.ifNull(right, () -> "参数right不能为空", null);
+        AssertUtils.notNull(left, "参数left不能为null");
+        AssertUtils.notNull(right, "参数right不能为null");
 
         if(left.isAssignableFrom(right)) {
             return true;
         }
+
+        if(left.isArray() && right.isArray()) {
+            return isAssignableFrom(left.getComponentType(), right.getComponentType());
+        }
+
         if(left.isPrimitive()) {
             Class<?> leftWrapper = primitive2WrapCache.get(left);
             return leftWrapper.isAssignableFrom(right);
@@ -193,57 +207,18 @@ public abstract class ClazzUtils {
 
     }
 
-    /*
-     * 返回此clazz所在package的资源
-     * 如果clazz=null,primitive,array primitive;clazz所在的package设置为"",表示直接使用relativeResourceName指定的资源
-     * 否则从clazz.getName()解析出所在的package,relativeResourceName则表示此packagePath下面的资源
-     * @param clazz
-     * @param relativeResourceName 资源名称
-     * @return classpath，能够直接被加载
-     *   @see ClassLoader#getResource(String)
-     */
-    public static String getClassPathOfCurrentPackage(Class<?> clazz, String relativeResourceName) {
 
-        relativeResourceName = Optional.ofNullable(relativeResourceName).orElse(PATH_SEP);
-        if(!relativeResourceName.startsWith(PATH_SEP)) relativeResourceName = PATH_SEP + relativeResourceName;
-
-        //String path = Optional.ofNullable(clazz).map(c -> c.getName()).orElse("");
-        String path = null;
-        if(clazz == null) {
-            path = "";
-        } else if(clazz.isPrimitive()) {
-            path = "";
-        } else if(clazz.isArray()) {
-            Class<?> componentTypeClass = clazz.getComponentType();
-            if(componentTypeClass.isPrimitive()) path = "";
-            else path = componentTypeClass.getName();
-        } else {
-            path = clazz.getName();
-        }
-        int idx = path.lastIndexOf(PACKAGE_SEP);
-        String packagePath = null;
-        if(idx != -1) {
-            packagePath = path.substring(0, idx);
-        } else {
-            packagePath = "";
-        }
-        packagePath = packagePath.replace(PACKAGE_SEP, PATH_SEP);
-
-        String pathReturn = packagePath + relativeResourceName;
-        if(pathReturn.startsWith(PATH_SEP)) return pathReturn.substring(PATH_SEP.length());
-        return pathReturn;
-    }
-
-
-    /*
-     * 类或接口的 继承，实现 树形结构
+    /**
+     * 继承结构解析树
      * @see Component
-     * 如果clazz是一个primitive，返回ClazzLeaf，封装此primitive的Class Object
-     * 如果clazz是一个array，返回ClazzComponent,封装此array的Class Object，默认返回拥有三个成员(Object，Cloneable，Serializable)
-     *   @see Class#getSuperclass()
-     *   @see Class#getInterfaces()
-     * @param clazz null if clazz is null
-     * @return 类或接口的继承，实现 树形结构
+     * 如果clazz是一个primitive，返回ClazzLeaf，封装此primitive的Class
+     * 如果clazz是一个array，返回ClazzComponent,封装此array的Class，默认返回拥有三个成员(Object，Cloneable，Serializable)
+     * 如果clazz is null, 返回null
+     * @see Class#getSuperclass()
+     * @see Class#getInterfaces()
+     * @see ClazzUtilsTest
+     * @param clazz class
+     * @return 树
      */
     public static Component<Class<?>> clazzTree(Class<?> clazz) {
         if(clazz == null) return null;
@@ -259,32 +234,36 @@ public abstract class ClazzUtils {
         }
 
         Component superClazzComponent = clazzTree(superClazz);
-        result.addClazzParent(superClazzComponent);
+        if(superClazzComponent != null)
+            result.addChild(superClazzComponent);
         for(Class<?> superInterface : superInterfaces) {
             Component superInterfaceComponent = clazzTree(superInterface);
-            result.addClazzParent(superInterfaceComponent);
+            result.addChild(superInterfaceComponent);
         }
 
         return result;
     }
 
-    /*
+
+
+    /**
      * 获取clazz的所有基类
      * 如果clazz是一个declared class,enum，返回其所有基类
      * 如果clazz是一个interface,annotation,primitive,返回empty list
      * 如果clazz是一个array, 返回List[Object.class]
-     * @param clazz empty list if clazz is null
-     * @return
+     * 如果clazz is null, 返回empty list
+     * @param clazz class
+     * @return clazz的所有基类
      */
     public static List<Class<?>> getAllSuperClass(Class<?> clazz) {
         Component<Class<?>> component = clazzTree(clazz);
         return getAllSuperClass(component);
     }
 
-    /*
+    /**
      * 获取clazz的所有基类
      * @param component empty list if component is null
-     * @return
+     * @return clazz的所有基类
      */
     public static List<Class<?>> getAllSuperClass(Component<Class<?>> component) {
         if(component == null) return new ArrayList<>();
@@ -292,23 +271,23 @@ public abstract class ClazzUtils {
         return componentResolver.getAllSuperClass();
     }
 
-    /*
+    /**
      * 获取clazz的所有基接口
      * 如果clazz是一个declared class,interface,annotation,返回其所有基接口
      * 如果clazz是一个enum,primitive,返回empty list
      * 如果clazz是一个array,返回List[Cloneable.class,Serializable.class]
-     * @param clazz
-     * @return
+     * @param clazz class
+     * @return clazz的所有基接口
      */
     public static List<Class<?>> getAllInterfaces(Class<?> clazz) {
         Component<Class<?>> component = clazzTree(clazz);
         return getAllInterfaces(component);
     }
 
-    /*
+    /**
      * 获取clazz的所有基接口
      * @param component empty list if component is null
-     * @return
+     * @return clazz的所有基类
      */
     public static List<Class<?>> getAllInterfaces(Component<Class<?>> component) {
         if(component == null) return new ArrayList<>();

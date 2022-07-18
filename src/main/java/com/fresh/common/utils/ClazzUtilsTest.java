@@ -1,12 +1,11 @@
 package com.fresh.common.utils;
 
 
-import com.fresh.common.component.ClazzComponentResolver;
+import com.fresh.common.component.clazz.ClazzComponentResolver;
 import com.fresh.common.component.Component;
 import com.fresh.common.enums.FreshForTestEnum;
 import com.fresh.common.result.JsonResult;
 
-import java.net.URL;
 import java.util.List;
 
 /**
@@ -18,12 +17,9 @@ public class ClazzUtilsTest {
 
         //testForInnerClazz();
 
-        //testForName();
+        testForName();
 
-        //testIsAssignableFrom();
-
-        //testGetClassPathofCurrentPackage();
-
+        testIsAssignableFrom();
 
         testClazzTree();
 
@@ -61,50 +57,46 @@ public class ClazzUtilsTest {
         Class<?> intArrayClass = ClazzUtils.forName("int[]", null);
         System.out.println("int[]: " + intArrayClass);
         System.out.println("int[].class == intArrayClass: " + (intArrayClass==int[].class));
-        Class<?> objArray1 = ClazzUtils.forName("[Lcom.sc.common.vo.JsonResult;", null);
+        Class<?> objArray1 = ClazzUtils.forName("[Lcom.fresh.common.result.JsonResult;", null);
         System.out.println("objArray1: " + objArray1);
         System.out.println("obj[].class ==  objArray1: " + (objArray1 == JsonResult[].class));
-        Class<?> objArray2 = ClazzUtils.forName("com.sc.common.vo.JsonResult[]", null);
+        Class<?> objArray2 = ClazzUtils.forName("com.fresh.common.result.JsonResult[]", null);
         System.out.println("objArray2: " + objArray2);
         System.out.println("obj[].class ==  objArray2: " + (objArray1 == JsonResult[].class));
-        Class<?> clazz = ClazzUtils.forName("com.sc.common.utils.TestForInnerClazz", null);
+        Class<?> clazz = ClazzUtils.forName("com.fresh.common.utils.TestForInnerClazz", null);
         System.out.println(clazz);
-        Class<?> innerClazz = ClazzUtils.forName("com.sc.common.utils.TestForInnerClazz$PubStaticInnerClazz", null);
+        Class<?> innerClazz = ClazzUtils.forName("com.fresh.common.utils.TestForInnerClazz$PubStaticInnerClazz", null);
         System.out.println(innerClazz);
 
-        System.out.println("testForName");
+        System.out.println("---------------------testForName---------------------");
     }
 
 
     private static void testIsAssignableFrom() {
         //primitive
-        System.out.println(int.class.isAssignableFrom(int.class));
-        System.out.println(int.class.isAssignableFrom(Integer.class));
-        System.out.println(Integer.class.isAssignableFrom(int.class));
-
-        //array(primitive)
-        System.out.println(int[].class.isAssignableFrom(int[].class));
-        System.out.println(Integer[].class.isAssignableFrom(int[].class));
-        System.out.println(int[].class.isAssignableFrom(Integer[].class));
+        System.out.println("int.class assignableFrom int.class: " + int.class.isAssignableFrom(int.class));
+        System.out.println("int.class assignableFrom Integer.class: " + int.class.isAssignableFrom(Integer.class));
+        System.out.println("Integer.class assignableFrom int.class: " + Integer.class.isAssignableFrom(int.class));
 
         System.out.println(ClazzUtils.isAssignableFrom(int.class, Integer.class));
         System.out.println(ClazzUtils.isAssignableFrom(Integer.class, int.class));
 
 
+        //array(primitive)
+        System.out.println("int[] assignableFrom int[]: " + int[].class.isAssignableFrom(int[].class));
+        System.out.println("Integer[] assignableFrom int[]: " + Integer[].class.isAssignableFrom(int[].class));
+        System.out.println("int[] assignableFrom Integer[]: " + int[].class.isAssignableFrom(Integer[].class));
+        System.out.println("Integer[][][] assignableFrom Integer[][][]: " + Integer[][][].class.isAssignableFrom(Integer[][][].class));
+
+        System.out.println(ClazzUtils.isAssignableFrom(int[].class, int[].class));
+        System.out.println(ClazzUtils.isAssignableFrom(int[].class, Integer[].class));
+        System.out.println(ClazzUtils.isAssignableFrom(Integer[].class, int[].class));
+        System.out.println(ClazzUtils.isAssignableFrom(Integer[][][].class, int[][][].class));
+        System.out.println(ClazzUtils.isAssignableFrom(Integer[][].class, int[][][].class));
+
+        System.out.println("---------------------testIsAssignableFrom---------------------");
     }
 
-    private static void testGetClassPathofCurrentPackage() {
-        System.out.println(ClazzUtils.getClassPathOfCurrentPackage(null, null));
-        System.out.println(ClazzUtils.getClassPathOfCurrentPackage(null, "/com"));
-        System.out.println(ClazzUtils.getClassPathOfCurrentPackage(int.class, "/com"));
-        System.out.println(ClazzUtils.getClassPathOfCurrentPackage(int[].class, "/com"));
-        System.out.println(ClazzUtils.getClassPathOfCurrentPackage(TestForInnerClazz[].class, "NumberUnitUtils.class"));
-        String classpath = ClazzUtils.getClassPathOfCurrentPackage(JsonResult.class, "JsonResult.class");
-        System.out.println(classpath);
-        URL classpathResource = ClazzUtils.getDefaultClassLoader().getResource(classpath);
-        System.out.println(classpathResource);
-
-    }
 
 
     private static void testClazzTree() {
@@ -114,8 +106,8 @@ public class ClazzUtilsTest {
         Component<Class<?>> result3 = ClazzUtils.clazzTree(int[].class);
         Component<Class<?>> result4 = ClazzUtils.clazzTree(A[].class);
 
-        Class<?> node = result.getInfo();
-        List<Component<Class<?>>> childs = result.getChilds();
+        Class<?> node = result.getEntity();
+        List<Component<Class<?>>> childs = result.getAllChild();
 
         List<Class<?>> supper1 = ClazzUtils.getAllSuperClass(A.class);
         List<Class<?>> supper2 = ClazzUtils.getAllSuperClass(FreshForTestEnum.class);
@@ -132,7 +124,7 @@ public class ClazzUtilsTest {
         List<Class<?>> inter6 = ClazzUtils.getAllInterfaces(A[].class);
 
 
-        System.out.println(result);
+        System.out.println("---------------------testClazzTree---------------------");
 
     }
 

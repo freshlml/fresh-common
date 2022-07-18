@@ -1,5 +1,8 @@
 package com.fresh.common.component;
 
+import com.fresh.common.component.clazz.ClazzComposite;
+import com.fresh.common.utils.AssertUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,20 +13,22 @@ import java.util.List;
  */
 public class Composite<T> extends AbstractComponent<T> {
 
-    private final List<Component<T>> clazzParents = new ArrayList<>();
+    private final List<Component<T>> composites = new ArrayList<>();
 
-    public Composite(T info) {
-        super(info);
+    public Composite(T entity) {
+        super(entity);
     }
     public Composite() {}
 
     @Override
-    public List<Component<T>> getChilds() {
-        return clazzParents;
+    public List<Component<T>> getAllChild() {
+        return composites;
     }
 
-    public void addClazzParent(Component clazz) {
-        if(clazz != null) clazzParents.add(clazz);
+    @Override
+    public void addChild(Component<T> child) {
+        AssertUtils.notNull(child, "参数child不能为null");
+        this.composites.add(child);
     }
 
 }

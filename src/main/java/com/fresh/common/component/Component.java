@@ -12,15 +12,21 @@ import java.util.List;
 public interface Component<T> {
 
     /**
-     * 获取当前的节点信息
-     * @return 节点信息
+     * 获取当前节点的信息，可能为null
+     * @return 当前节点
      */
-    T getInfo();
+    T getEntity();
 
     /**
-     * 获取子节点
-     * @return childs
+     * 获取所有子节点,如果没有子节点，返回empty list
+     * @return all child
      */
-    List<Component<T>> getChilds();
+    List<Component<T>> getAllChild();
+
+    /**
+     * 增加子节点
+     * @param child 节点，不应该为null
+     */
+    void addChild(Component<T> child);
 
 }

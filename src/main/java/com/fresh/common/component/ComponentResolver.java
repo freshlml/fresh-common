@@ -1,5 +1,7 @@
 package com.fresh.common.component;
 
+import com.fresh.common.component.clazz.ClazzComponentResolver;
+
 import java.util.List;
 
 /**
@@ -18,15 +20,15 @@ public interface ComponentResolver<T> {
     boolean isLeaf();
 
     /**
-     * 获取当前的节点信息
+     * 获取当前的节点的信息
      * @return T
      */
-    T getInfo();
+    T getEntity();
 
     /**
-     * 获取子节点
-     * @return childs
+     * 获取所有子节点
+     * @return 所有子节点
      */
-    List<Component<T>> getChilds();
+    List<Component<T>> getAllChild();
 
 }
