@@ -5,10 +5,12 @@ import com.fresh.common.component.clazz.ClazzComponentResolver;
 import com.fresh.common.component.clazz.ClazzComposite;
 import com.fresh.common.component.clazz.ClazzLeaf;
 import com.fresh.common.component.clazz.DefaultClazzComponentResolver;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Array;
 import java.util.*;
 
+@Slf4j
 public abstract class ClazzUtils {
 
     /** 数组后缀 */
@@ -130,14 +132,14 @@ public abstract class ClazzUtils {
      * enhance Class.forName(...).
      * 如果是primitive, eg: className=int
      * 如果是array, eg: className=int[]; className=java.lang.Integer[]; className=com.sc.common.vo.JsonResult[]; className=[Lcom.sc.common.vo.JsonResult;
-     * 如果是declared class,enum,interface,annotation
+     * 如果是declared class,enum,interface,annotation,Class#forName
      *
      * @see Class#forName(String, boolean, ClassLoader)
      * @see ClazzUtilsTest
      * @param className className
      * @param classLoader ClassLoader
-     * @exception ClassNotFoundException if the class cannot be loaded
-     * @return
+     * @exception ClassNotFoundException Class#forName的ClassNotFoundException
+     * @return Class or null if can not find
      */
     public static Class<?> forName(String className, ClassLoader classLoader) throws ClassNotFoundException {
         AssertUtils.notNull(className, "参数className不能为null");
@@ -157,12 +159,7 @@ public abstract class ClazzUtils {
         }
 
         ClassLoader classLoaderLocal = Optional.ofNullable(classLoader).orElse(getDefaultClassLoader());
-        try {
-            return Class.forName(className, true, classLoaderLocal);
-        } catch (ClassNotFoundException e) {
-            throw e;
-        }
-
+        return Class.forName(className, true, classLoaderLocal);
     }
 
     private static boolean isStringPrimitive(String className) {

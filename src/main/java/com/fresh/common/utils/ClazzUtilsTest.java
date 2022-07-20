@@ -15,7 +15,7 @@ public class ClazzUtilsTest {
 
     public static void main(String argv[]) throws Exception {
 
-        //testForInnerClazz();
+        testForInnerClazz();
 
         testForName();
 
@@ -23,23 +23,57 @@ public class ClazzUtilsTest {
 
         testClazzTree();
 
-        System.out.println(1);
     }
 
+    private static class TestForInnerClazz {
+        private String str;
+
+        public TestForInnerClazz.PubInnerClazz newPubInnerClazz() {
+            return new TestForInnerClazz.PubInnerClazz();
+        }
+        public Class<TestForInnerClazz.PubInnerClazz> getPubInnerClazzClass() {
+            return TestForInnerClazz.PubInnerClazz.class;
+        }
+        public class PubInnerClazz {}
+
+
+        public Class<TestForInnerClazz.NonPubInnerClazz> getNonPubInnerClazzClass() {
+            return TestForInnerClazz.NonPubInnerClazz.class;
+        }
+        public void useNonPubInnerClazz() {
+            TestForInnerClazz.NonPubInnerClazz nonPubInnerClazz = new TestForInnerClazz.NonPubInnerClazz();
+            Class<TestForInnerClazz.NonPubInnerClazz> nonPubInnerClazzClass = TestForInnerClazz.NonPubInnerClazz.class;
+            System.out.println(nonPubInnerClazzClass.getName());
+            System.out.println(nonPubInnerClazzClass.getDeclaringClass().getName());
+        }
+        private class NonPubInnerClazz {}
+
+
+        public void useNonPubStaticInnerClazz() {
+            TestForInnerClazz.NonPubStaticInnerClazz nonPubStaticInnerClazz = new TestForInnerClazz.NonPubStaticInnerClazz();
+            Class<TestForInnerClazz.NonPubStaticInnerClazz> nonPubStaticInnerClazzClass = TestForInnerClazz.NonPubStaticInnerClazz.class;
+            System.out.println(nonPubStaticInnerClazzClass.getName());
+            System.out.println(nonPubStaticInnerClazzClass.getDeclaringClass().getName());
+
+        }
+        static class NonPubStaticInnerClazz {}
+        public static class PubStaticInnerClazz {}
+
+    }
     public static void testForInnerClazz() {
         TestForInnerClazz instance = new TestForInnerClazz();
-        TestForInnerClazz.PubInnerClazz pubInnerClazz = instance.new PubInnerClazz();//public inner class or instance.newPubInnerClazz();
-        Class<? extends TestForInnerClazz.PubInnerClazz> pubInnerClazzClass = pubInnerClazz.getClass(); //public inner class的Class Object or instance.getPubInnerClazzClass
-        System.out.println(pubInnerClazzClass.getName()); //com.sc.common.utils.TestForInnerClazz$PubInnerClazz
-        System.out.println(pubInnerClazzClass.getDeclaringClass().getName()); //com.sc.common.utils.TestForInnerClazz
+        TestForInnerClazz.PubInnerClazz pubInnerClazz = instance.new PubInnerClazz();
+        Class<? extends TestForInnerClazz.PubInnerClazz> pubInnerClazzClass = pubInnerClazz.getClass();
+        System.out.println(pubInnerClazzClass.getName());
+        System.out.println(pubInnerClazzClass.getDeclaringClass().getName());
 
-        TestForInnerClazz.PubStaticInnerClazz pubStaticInnerClazz = new TestForInnerClazz.PubStaticInnerClazz(); //public static inner class
-        Class<TestForInnerClazz.PubStaticInnerClazz> pubStaticInnerClazzClass = TestForInnerClazz.PubStaticInnerClazz.class; //public static inner class的Class Object
-        System.out.println(pubStaticInnerClazzClass.getName()); //com.sc.common.utils.TestForInnerClazz$PubStaticInnerClazz
-        System.out.println(pubStaticInnerClazzClass.getDeclaringClass().getName()); //com.sc.common.utils.TestForInnerClazz
+        TestForInnerClazz.PubStaticInnerClazz pubStaticInnerClazz = new TestForInnerClazz.PubStaticInnerClazz();
+        Class<TestForInnerClazz.PubStaticInnerClazz> pubStaticInnerClazzClass = TestForInnerClazz.PubStaticInnerClazz.class;
+        System.out.println(pubStaticInnerClazzClass.getName());
+        System.out.println(pubStaticInnerClazzClass.getDeclaringClass().getName());
 
-        instance.useNonPubInnerClazz();//NonPubInnerClass
-        instance.useNonPubStaticInnerClazz(); //NonPubStaticInnerClass
+        instance.useNonPubInnerClazz();
+        instance.useNonPubStaticInnerClazz();
 
         //通过外部类获取内部类的Class Object
         Class<TestForInnerClazz> clazz = TestForInnerClazz.class;
@@ -47,7 +81,7 @@ public class ClazzUtilsTest {
         //from supper class
         Class<? super TestForInnerClazz> supperClazz = clazz.getSuperclass();
 
-
+        System.out.println("-----------testForInnerClazz-----------");
     }
 
     public static void testForName() throws Exception {

@@ -4,12 +4,8 @@ package com.fresh.common.reflect;
 import com.fresh.common.reflect.enums.NothingEnum;
 
 import javax.annotation.PostConstruct;
-import java.lang.annotation.*;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ClazzTest {
@@ -17,22 +13,17 @@ public class ClazzTest {
     public static void main(String argv[]) throws Exception {
 
         classTest();
-        forConsTest();
         forNameTest();
+        newInstanceTest();
         isInstanceTest();
-        isMemberClassTest();
-        getNameTest();
-        getEnumConstantsTest();
-        getClassesTest();
-        getSupperClassTest();
-        getInterfacesTest();
-        getSignersTest();
-        annotationTest();
-        getTypeParametersTest();
+        superTest();
+        forTest();
+
+
 
     }
 
-    //根据类型获取Class
+    //获取Class
     private static void classTest() {
         //declared class, enum, interface, annotation, array, primitive
         Class<ClazzTest> declaredClassClazz = ClazzTest.class;
@@ -45,120 +36,152 @@ public class ClazzTest {
         Class<Void> voidClass = void.class;
         //error List<String>.class;
         Class<List> listClass = List.class;  //带泛型的类型共用一个Class
+
+        System.out.println("---------classTest-----------\n");
     }
 
-    //getConstructor方法测试
-    private static void forConsTest() throws Exception {
-        Constructor<Book2> con1 = Book2.class.getConstructor(new Class<?>[]{Object.class});
-        Constructor<Book2> con2 = Book2.class.getConstructor(new Class<?>[]{String.class});
-        Constructor<Book2> con3 = Book2.class.getConstructor(new Class<?>[]{int[].class});
-        Constructor<Book2> con4 = Book2.class.getConstructor(new Class<?>[]{Object[].class});
-        Constructor<Book2> con5 = Book2.class.getConstructor(new Class<?>[]{Book.class});
-        Constructor<Book2> con6 = Book2.class.getConstructor(new Class<?>[]{List[].class});
-        Constructor<Book2> con7 = Book2.class.getConstructor(new Class<?>[]{Number.class});
-
-        Constructor<?>[] ctor = Yui.class.getDeclaredConstructors();
-        Arrays.stream(ctor).forEach(tor -> System.out.println(tor.isSynthetic()));
-    }
-
-    //forName方法测试
+    private static class n_a {}
+    //Class#forName方法测试
     private static void forNameTest() throws Exception {
+        //使用Class#forName时，程序应该捕获并处理ClassNotFoundException
+        try {
+            Class<?> notFount = Class.forName("nothing");
+        } catch (ClassNotFoundException e) {
+            System.out.println("class not found");
+        }
+
         Class<?> clazz = Class.forName("com.fresh.common.reflect.ClazzTest");
+        //成员内部类，使用$分隔符
+        Class<?> n_clazz = Class.forName("com.fresh.common.reflect.ClazzTest$n_a");
+
+        
+        System.out.println("---------forNameTest------------\n");
     }
 
-    //isInstance、isAssignableFrom方法测试
-    private static void isInstanceTest() throws Exception {
-        Class<ClazzTest[]> classArrayClazz = ClazzTest[].class;
-        System.out.println(classArrayClazz.isInstance(new ClazzTest[10]));
-        System.out.println(Object[].class.isInstance(new ClazzTest[10]));
-        System.out.println(int.class.isInstance(1));
-
-        System.out.println(Object[].class.isAssignableFrom(ClazzTest[].class));
+    private static class B {
+        private B() {}
     }
+    private static void newInstanceTest() {
 
-    //isMemberClass测试
-    private static void isMemberClassTest() throws Exception {
-        //Class<Uiop.InnerOp> innerClazz = Uiop.InnerOp.class;
-        //System.out.println(innerClazz.isMemberClass());
-        //Class<Uiop.InnerStaticOp> innerStaticClazz = Uiop.InnerStaticOp.class;
-        //System.out.println(innerStaticClazz.isMemberClass());
-    }
+        try {
+            B b = B.class.newInstance();
+            System.out.println(b);
+        } catch (InstantiationException e) {
+            System.out.println(e.getMessage());
+        } catch (IllegalAccessException e) {
+            System.out.println(e.getMessage());
+        }
 
-    //getName getSimpleName getTypeName getCanonicalName
-    private static void getNameTest() {
-        Class<ClazzTest[]> classArrayClazz = ClazzTest[].class;
-        Class<ClazzTest> interfaceClazz = ClazzTest.class;
-
-        System.out.println(classArrayClazz.getName());
-        System.out.println(interfaceClazz.getSimpleName());
-        System.out.println(classArrayClazz.getTypeName());
-        System.out.println(classArrayClazz.getCanonicalName());
-    }
-
-    //getEnumConstants
-    private static void getEnumConstantsTest() {
-        Class<NothingEnum> enumClazz = NothingEnum.class;
-        NothingEnum[] result = enumClazz.getEnumConstants();
+        System.out.println("-----------newInstanceTest----------\n");
     }
 
 
-    //getClasses
-    private static void getClassesTest() {
-        Class<?>[] result = ClazzTest.class.getClasses();
-    }
+    //Class#isInstance、Class#isAssignableFrom方法测试
+    private static void isInstanceTest() {
 
-    //getSupperClass
-    private static void getSupperClassTest() {
-        Class<? super ClazzTest> superClasses = ClazzTest.class.getSuperclass();
-    }
+        boolean enum_isIns = Enum.class.isInstance(NothingEnum.ONE);
 
-    //getInterfaces
-    private static void getInterfacesTest() {
-        Class<?>[] result = ClazzTest.class.getInterfaces();
-    }
+        //数组的isInstance
+        boolean array_isIns1 = ClazzTest[][][].class.isInstance(new ClazzTest[10][10][100]);
+        boolean array_isIns2 = Object[][].class.isInstance(new ClazzTest[10][10]);
 
-    //getSigners
-    private static void getSignersTest() {
-        Object[] result = ClazzTest.class.getSigners();
-    }
+        boolean array_isIns3 = int[].class.isInstance(new int[10]);
+        boolean array_isIns4 = int[].class.isInstance(new Integer[10]); //false ,缺陷
+        boolean array_isIns5 = Integer[].class.isInstance(new Integer[10]);
+        boolean array_isIns6 = Integer[].class.isInstance(new int[10]); //false ,缺陷
 
-    //annotation
-    private static void annotationTest() {
-        PoAnnotation r1 = AnnotationClass.class.getAnnotation(PoAnnotation.class);
-        System.out.println(r1);
-        PosAnnotation r2 = AnnotationClass.class.getAnnotation(PosAnnotation.class);
-        System.out.println(r2);
-        PoAnnotation[] r3 = AnnotationClass.class.getAnnotationsByType(PoAnnotation.class);
-        System.out.println(r3);
+        //primitive type的isInstance
+        boolean int_isIns = int.class.isInstance(1);  //false ,缺陷
 
-        System.out.println(AnnotationClass.class.isAnnotationPresent(PoAnnotation.class));
-        System.out.println(AnnotationClass.class.isAnnotationPresent(PosAnnotation.class));
 
-    }
+        List<String>[] list = (List<String>[]) Array.newInstance(ArrayList.class, 2);
+        System.out.println(List[].class.isInstance(list));
 
-    //getTypeParameters
-    private static void getTypeParametersTest() throws Exception {
-        Class<Book> bookClazz = (Class<Book>) Class.forName("com.project.normal.test.reflect.ClazzTest.Book");
-        System.out.println(bookClazz);
-        TypeVariable<Class<Book>>[] typeVariables = bookClazz.getTypeParameters();
+        System.out.println("----------isInstance-----------\n");
 
-        Book<String> bookString = new Book<>();
-        Class<? extends Book> bookStringClazz = bookString.getClass();
-        TypeVariable<? extends Class<? extends Book>>[] typeVariables2 = bookStringClazz.getTypeParameters();
+        //isAssignableFrom的缺陷
+        boolean int_isAssignable = int.class.isAssignableFrom(Integer.class);  //false
+        boolean int_isAssignable2 = Integer.class.isAssignableFrom(int.class); //false
+
+        //数组的isAssignable
+        boolean array_isAssignable = Object[][].class.isAssignableFrom(ClazzTest[][].class);
+        boolean array_isAssignable2 = int[].class.isAssignableFrom(Integer[].class); //false
+        boolean array_isAssignable3 = Integer[].class.isAssignableFrom(int[].class); //false
+
+        System.out.println("------------isAssignableFrom------------\n");
     }
 
 
-    private static class Yui {
-        public <T> Yui(T t) {}
+
+    private static class C {}
+    private static class D<T> extends C {}
+    private static class E extends D<String> {}
+
+    interface F {}
+    interface G extends F {}
+    interface H {}
+    private static class II implements H, G {}
+    //测试superclass,superinterface相关方法
+    private static void superTest() {
+
+        ParameterizedType super_generic_E = (ParameterizedType) E.class.getGenericSuperclass();
+        Class<D> class_D = (Class<D>) super_generic_E.getRawType();
+        Class<? super D> super_class_D = class_D.getSuperclass();
+        Class<C> class_C = (Class<C>) super_class_D;
+
+
+        Class<?>[] ii_interfaces = II.class.getInterfaces();
+
+        System.out.println("--------superTest-------------\n");
     }
 
-    @PosAnnotation(
-           {@PoAnnotation(name="nei")}
-    )
-    @PoAnnotation(name="wai")
-    private static class AnnotationClass {
+    private static class n_b {}
+    //工具方法测试
+    private static void forTest() {
+        class local_n_c {}
+
+        System.out.println(int.class.getName());
+        System.out.println(long[].class.getName());
+        System.out.println(ClazzTest[].class.getName());
+        System.out.println(ClazzTest.class.getName());
+        System.out.println(n_b.class.getName());
+        System.out.println(local_n_c.class.getName());
+        System.out.println("----------getName----------\n");
+
+        System.out.println(int.class.getSimpleName());
+        System.out.println(long[].class.getSimpleName());
+        System.out.println(ClazzTest[].class.getSimpleName());
+        System.out.println(ClazzTest.class.getSimpleName());
+        System.out.println(n_b.class.getSimpleName());
+        System.out.println(local_n_c.class.getSimpleName());
+        System.out.println("----------getSimpleName------\n");
+
+        System.out.println(int.class.getTypeName());
+        System.out.println(long[].class.getTypeName());
+        System.out.println(ClazzTest[].class.getTypeName());
+        System.out.println(ClazzTest.class.getTypeName());
+        System.out.println(n_b.class.getTypeName());
+        System.out.println(local_n_c.class.getTypeName());
+        System.out.println("----------getTypeName------\n");
+        //note: 可以用getTypeName和ClazzUtils#forName配合
+
+        System.out.println(int.class.getCanonicalName());
+        System.out.println(long[].class.getCanonicalName());
+        System.out.println(ClazzTest[].class.getCanonicalName());
+        System.out.println(ClazzTest.class.getCanonicalName());
+        System.out.println(n_b.class.getCanonicalName());
+        System.out.println(local_n_c.class.getCanonicalName());
+        System.out.println("---------getCanonicalName-------\n");
 
     }
+
+
+
+
+
+
+
+
 
 
     private static class Book2 {
@@ -228,20 +251,6 @@ public class ClazzTest {
             System.out.println(1);
         }
 
-    }
-
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    @Documented
-    @interface PosAnnotation {
-        PoAnnotation[] value();
-    }
-    @Documented
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.TYPE,ElementType.PARAMETER})
-    @Repeatable(PosAnnotation.class)
-    @interface PoAnnotation {
-        String name();
     }
 
 }
