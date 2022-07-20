@@ -1,4 +1,4 @@
-package com.fresh.common.utils.reflect.proxyjdk;
+package com.fresh.common.reflect.proxyjdk;
 
 public interface I {
     void m1();

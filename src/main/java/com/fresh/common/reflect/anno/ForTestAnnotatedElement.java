@@ -1,4 +1,4 @@
-package com.fresh.common.utils.reflect.anno;
+package com.fresh.common.reflect.anno;
 
 import java.lang.annotation.*;
 import java.util.Arrays;

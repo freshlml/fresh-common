@@ -1,4 +1,4 @@
-package com.fresh.common.utils.reflect.genericvar;
+package com.fresh.common.reflect.genericvar;
 
 import java.util.List;
 import java.util.Map;

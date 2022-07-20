@@ -1,4 +1,4 @@
-package com.fresh.common.utils.reflect.field;
+package com.fresh.common.reflect;
 
 import java.lang.reflect.Field;
 

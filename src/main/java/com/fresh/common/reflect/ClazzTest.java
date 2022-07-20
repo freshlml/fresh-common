@@ -1,11 +1,10 @@
-package com.fresh.common.utils.reflect;
+package com.fresh.common.reflect;
 
 
-import com.fresh.common.utils.reflect.anno.PoAnnotation;
-import com.fresh.common.utils.reflect.anno.PosAnnotation;
-import com.fresh.common.utils.reflect.enums.NothingEnum;
+import com.fresh.common.reflect.enums.NothingEnum;
 
 import javax.annotation.PostConstruct;
+import java.lang.annotation.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.TypeVariable;
@@ -64,7 +63,7 @@ public class ClazzTest {
 
     //forName方法测试
     private static void forNameTest() throws Exception {
-        Class<?> clazz = Class.forName("com.fresh.common.utils.reflect.ClazzTest");
+        Class<?> clazz = Class.forName("com.fresh.common.reflect.ClazzTest");
     }
 
     //isInstance、isAssignableFrom方法测试
@@ -229,6 +228,20 @@ public class ClazzTest {
             System.out.println(1);
         }
 
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.TYPE)
+    @Documented
+    @interface PosAnnotation {
+        PoAnnotation[] value();
+    }
+    @Documented
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.TYPE,ElementType.PARAMETER})
+    @Repeatable(PosAnnotation.class)
+    @interface PoAnnotation {
+        String name();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.fresh.common.utils.reflect.enums;
+package com.fresh.common.reflect.enums;
 
 public enum NothingEnum {
     ONE("one", "one");

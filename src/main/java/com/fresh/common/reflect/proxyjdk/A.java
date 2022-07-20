@@ -1,4 +1,4 @@
-package com.fresh.common.utils.reflect.proxyjdk;
+package com.fresh.common.reflect.proxyjdk;
 
 import java.lang.annotation.*;
 import java.lang.reflect.InvocationHandler;
