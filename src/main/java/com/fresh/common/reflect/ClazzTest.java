@@ -20,7 +20,7 @@ public class ClazzTest {
         forTest();
 
         testGetField();
-
+        testGetMethod();
 
     }
 
@@ -186,6 +186,8 @@ public class ClazzTest {
         public static String recursive = "a_super";
 
         String depth = "a_super";
+
+        String same_name_bl = "a_super";
     }
     interface Field_A extends Filed_A_Super {
         String recursive = "a";
@@ -212,11 +214,11 @@ public class ClazzTest {
         Field static_bl = GetFieldTest.class.getField("static_bl");
         Field non_static_bl = GetFieldTest.class.getField("non_static_bl");
 
-        //superinterface, 先根深度递归, 查找路径: GetFieldTest,Field_A,Field_A_Super,Field_B; Field_Super; Object
+        //superinterface, 先根深度递归, 查找路径: GetFieldTest,Field_A,Field_A_Super,Field_B
         Field recursive_field = GetFieldTest.class.getField("recursive");
         Field depth_field = GetFieldTest.class.getField("depth");
 
-        //相同名称field
+        //field的查找路径: GetFieldTest,Field_A,Field_A_Super,Field_B; Field_Super; Object
         Field same_name_field = GetFieldTest.class.getField("same_name_bl");
 
 
@@ -240,77 +242,78 @@ public class ClazzTest {
 
     }
 
-
-
-
-
-    private static class Book2 {
-
-        public Book2(String var) {}
-        public Book2(int[] vars) {}
-        public <T> Book2(T var) {}
-        public <T extends Number> Book2(T var) {}
-        public <T> Book2(T[] array) {}
-        public <T> Book2(List<T>[] listArray) {}
-        public <T> Book2(Book<T> ts) {}
-        public Book2(List<? extends Number> bk) {}
-
-        public <T> T say() {
-            return (T) "abc";
-        }
-        public <T> T say(T t) {
-            return t;
-        }
-        public <T> T[] see() {
-            //T[] t = new T[1];
-            return null;
-        }
-        public <T> List<T>[] see(List<T>[] param) {
-            //ArrayList<T>[] a = new ArrayList<T>[1];
-            return param;
-        }
-        public <T> Book<T> eat() {
-            return (Book<T>) new Book<String>();
-        }
-        public <T> Book<T> eat(Book<T> book) {
-            return book;
-        }
-        public Book<? extends Number> getEat() {
-            return new Book<Integer>();
-        }
-
+    interface Method_B {
 
     }
+    interface Method_A_Super {
+        public default void method_search() {}
+    }
+    interface Method_A extends Method_A_Super {
 
-    private static class Book<T> {
-        T t;  //TypeVariable，泛型变量类型
-        T[] array;//GenericArrayType，泛型数组类型;TypeVariable
-        List<T>[] listArray;//GenericArrayType，泛型数组类型;ParameterizedType,TypeVariable
-        Book<T> list;//ParameterizedType，泛型类型;TypeVariable
-        List<? extends Number> bb; //ParameterizedType，泛型类型;WildcardType
-        List<String> strList; //ParameterizedType，泛型类型;Class<String>
-        List<? extends List<T>> ll; //ParameterizedType，泛型类型;WildcardType，ParamerizedType，TypeVariable
+    }
+    interface I {
+        public static void i_static_method() {}
 
-        public Book() {
+        public default void method_search() {}
+    }
+    private static class Method_Super implements I {
+        public static void super_static_method() {}
+
+        public void method_search() {}
+    }
+    private static class TestGetMethod extends Method_Super implements Method_A, Method_B {
+        public static void static_method() {}
+        public void non_static_method() {}
+
+        public void method_search() {}
+
+        private void private_method() {}
+        private static void static_private_method() {}
+    }
+    private static void testGetMethod() throws NoSuchMethodException {
+
+        //static方法
+        Method static_method = TestGetMethod.class.getMethod("static_method");
+        Method non_static_method = TestGetMethod.class.getMethod("non_static_method");
+        Method super_static_method = TestGetMethod.class.getMethod("super_static_method");
+        try {
+            Method interface_static_method = TestGetMethod.class.getMethod("i_static_method");
+        } catch (NoSuchMethodException e) {
+            //can not find 接口中的static方法
         }
 
-        public Book(T t, T[] array, List<T>[] listArray, Book<T> list, List<? extends Number> bb, List<String> strList, List<? extends List<T>> ll) {
-            this.t = t;
-            this.array = array;
-            this.listArray = listArray;
-            this.list = list;
-            this.bb = bb;
-            this.strList = strList;
-            this.ll = ll;
+        //查找路径: TestGetMethod,Method_Super,Object,I,Method_A,Method_A_Super,Method_B
+        Method method_search = TestGetMethod.class.getMethod("method_search");
+        
+        //支持在Object中查找toString，hashCode，wait，notify，getClass
+        Method to_String = TestGetMethod.class.getMethod("toString");
+        Method hash_code = TestGetMethod.class.getMethod("hashCode");
+        Method wait = TestGetMethod.class.getMethod("wait");
+        Method notify = TestGetMethod.class.getMethod("notify");
+        Method getClass = TestGetMethod.class.getMethod("getClass");
+        //can not find equals, clone, finalize
+        //Method equals = TestGetMethod.class.getMethod("equals");
+        //Method clone = TestGetMethod.class.getMethod("clone");
+        //Method finalize = TestGetMethod.class.getMethod("finalize");
+
+
+        //getMethods
+        Method[] methods = TestGetMethod.class.getMethods();
+
+
+        //declared语义
+        Method private_method = TestGetMethod.class.getDeclaredMethod("private_method");
+        Method static_private_method = TestGetMethod.class.getDeclaredMethod("static_private_method");
+        try {
+            Method i_static_method = TestGetMethod.class.getDeclaredMethod("i_static_method");
+        } catch (NoSuchMethodException e) {
+            //can not find 接口中的static方法
         }
 
-        public static void main(String argv[]) throws Exception {
-            List<String>[] genericArray = (ArrayList<String>[]) Array.newInstance(ArrayList.class, 2);
-            new Book<String>("123", new String[1], genericArray, new Book<String>(), new ArrayList<Integer>(), new ArrayList<String>(), new ArrayList<ArrayList<String>>());
+        Method[] declared_methods = TestGetMethod.class.getDeclaredMethods();
 
-            System.out.println(1);
-        }
 
+        System.out.println("-----------testGetMethod-------------");
     }
 
 }
