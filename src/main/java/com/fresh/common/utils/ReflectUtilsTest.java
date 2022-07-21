@@ -11,11 +11,11 @@ public class ReflectUtilsTest {
 
     public static void main(String argv[]) {
 
-        //testGetConstructor();
+        testGetConstructor();
 
-        //testMethod();
+        testGetMethod();
 
-        //findDeclaredMethod();
+        findDeclaredMethod();
 
         findAllDeclaredMethodsBFS();
 
@@ -159,7 +159,7 @@ public class ReflectUtilsTest {
     }
 
 
-    private static void testMethod() {
+    private static void testGetMethod() {
 
         Method m1 = ReflectUtils.getMethod(TestMethod.class, "getG", new Class<?>[]{String.class});
         Method m2 = ReflectUtils.getMethod(TestMethod.class, "genericT");
@@ -169,15 +169,12 @@ public class ReflectUtilsTest {
         Method m6 = ReflectUtils.getMethod(TestMethod.class, "baseOver");
         Method m7 = ReflectUtils.getMethod(TestMethod.class, "base");
         Method m8 = ReflectUtils.getMethod(TestMethod.class, "interStatic");
+        Method m9 = ReflectUtils.getMethod(TestMethod.class, "base");
 
         Method[] l1 = TestMethod.class.getDeclaredMethods();
         Method[] l2 = TestMethod.class.getSuperclass().getDeclaredMethods();
 
-        Method k1 = ReflectUtils.findDeclaredMethod(TestMethod.class, "baseInter");
-
-        Method[] rs = ReflectionUtils.getAllDeclaredMethods(TestMethod.class);
-        
-        System.out.println(1);
+        System.out.println("--------------testGetMethod---------------");
     }
     private static class Base<G> {
         public void base() {System.out.println("base");}
@@ -238,6 +235,7 @@ public class ReflectUtilsTest {
 
     }
 
+
     private static void testGetConstructor() {
 
         Constructor<?> c1 = ReflectUtils.getConstructor(Loop.class);
@@ -252,7 +250,7 @@ public class ReflectUtilsTest {
 
         Constructor<?>[] cs = Loop.class.getConstructors();
         
-        System.out.println(1);
+        System.out.println("-----------------testGetConstructor---------------------");
 
     }
     private static class LoopBase<E> {

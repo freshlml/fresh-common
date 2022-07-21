@@ -19,21 +19,20 @@ public abstract class ReflectUtils {
 ////
 //Constructor
 ////
-    /*
+    /**
      * 判断是否有public构造器
      * @see ReflectUtils#getConstructor
-     * @param clazz
-     * @param paramTypes
-     * @return
+     * @param clazz class
+     * @param paramTypes 参数
+     * @return true or false
      */
     public static boolean hasConstructor(Class<?> clazz, Class<?>... paramTypes) {
         return getConstructor(clazz, paramTypes) != null;
     }
 
-    /*
+    /**
      * packing Class.getConstructor
-     * @see Class##getConstructor(Class, Class)
-     * 获取Class的public构造器，if NoSuchMethodException return null
+     * 获取Class的public构造器，if NoSuchMethodException return null, if denies access return null
      * clazz参数不能为null，如不传paramTypes，或者paramTypes=null，表示获取无参构造器
      *
      * 如果Class Object的构造器参数是TypeVariable,eg: class Leaf<T> { public Leaf(T t){} } ;则paramTypes=Class<?>[]{Object.class} (泛型擦除)
@@ -42,36 +41,43 @@ public abstract class ReflectUtils {
      * 如果Class Object的构造器参数是GenericArrayType,eg: class Loop { public <T> Loop(T[] t){} } ;则paramTypes=Class<?>[]{Object[].class} (泛型变量数组)
      *                                             eg: class Loop { public <T> Loop(List<T>[] t){} } ;则paramTypes=Class<?>[]{List[].class} (泛型类型数组)
      *
-     * 如果Class Object的构造器参数是ParameterizedType.eg: clas Loop { public <T> Loop(Loop<T> lt) } ;则paramTypes=Class<?>[]{Loop.class}
-     * @param clazz
-     * @param paramTypes
+     * 如果Class Object的构造器参数是ParameterizedType.eg: class Loop { public <T> Loop(Loop<T> lt) } ;则paramTypes=Class<?>[]{Loop.class}
+     *
+     * @see Class##getConstructor(Class, Class)
+     * @param clazz class
+     * @param paramTypes 参数
      * @return Constructor，or null if NoSuchMethod
      */
     public static Constructor<?> getConstructor(Class<?> clazz, Class<?>... paramTypes) {
-        AssertUtils.ifNull(clazz, () -> "参数clazz不能为空", null);
+        AssertUtils.notNull(clazz, "参数clazz不能为空");
         try {
             return clazz.getConstructor(paramTypes);
         } catch (NoSuchMethodException e) {
             return null;
+        } catch(SecurityException e) {
+            return null;
         }
     }
 
-    /*
+    /**
      * packing Class.getDeclaredConstructor
-     * @see Class#getDeclaredConstructor(Class[])
-     * 获取Class的构造器，and makeAccessible,if NoSuchMethodException return null
+     * 获取Class的构造器，and makeAccessible,if NoSuchMethodException return null, if denies access return null
      * clazz参数不能为null,paramTypes的说明{@link ReflectUtils#getConstructor}
-     * @param clazz
-     * @param paramTypes
-     * @return
+     *
+     * @see Class#getDeclaredConstructor(Class[])
+     * @param clazz class
+     * @param paramTypes 参数
+     * @return Constructor
      */
     public static Constructor<?> getDeclaredConstructor(Class<?> clazz, Class<?>... paramTypes) {
-        AssertUtils.ifNull(clazz, () -> "参数clazz不能为空", null);
+        AssertUtils.notNull(clazz, "参数clazz不能为空");
         try {
             Constructor<?> c = clazz.getDeclaredConstructor(paramTypes);
             makeAccessible(c);
             return c;
         } catch (NoSuchMethodException e) {
+            return null;
+        } catch (SecurityException e) {
             return null;
         }
     }
@@ -87,8 +93,8 @@ public abstract class ReflectUtils {
 ////
 //Method
 ////
-    /*
-     * packing Class.getMethod, {@link Class#getMethod} if NoSuchMethodException return null
+    /**
+     * packing Class.getMethod, {@link Class#getMethod} if NoSuchMethodException return null, if denies access return null
      *
      * clazz参数不能为null,methodName参数不能为空,paramTypes不传，或者paramTypes=null,表示获取无参方法
      *
@@ -102,49 +108,53 @@ public abstract class ReflectUtils {
      * Class.getMethod会判断return type，优先返回return type more specific的
      * 而一般bridge method的return type 更模糊
      *
-     * @param clazz
-     * @param methodName
-     * @param paramTypes
-     * @return
+     * @param clazz clazz
+     * @param methodName methodName
+     * @param paramTypes 参数
+     * @return Method
      */
     public static Method getMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) {
-        AssertUtils.ifNull(clazz, () -> "参数clazz不能为空", null);
-        AssertUtils.ifNull(methodName, () -> "参数methodName不能为空", null);
+        AssertUtils.notNull(clazz, "参数clazz不能为空");
+        AssertUtils.notNull(methodName, "参数methodName不能为空");
+
         try {
             return clazz.getMethod(methodName, paramTypes);
         } catch (NoSuchMethodException e) {
             return null;
+        } catch (SecurityException e) {
+            return null;
         }
     }
 
-    /*
+    /**
      * packing Class.getDeclaredMethod,获取Class Object中的method,
      *
-     * {@link Class#getDeclaredMethod} if NoSuchMethodException return null
+     * {@link Class#getDeclaredMethod} if NoSuchMethodException return null, if denies access return null
      *
      * clazz参数不能为null,methodName参数不能为空，paramTypes不传，或者paramTypes=null,表示获取无参方法
      *
      * paramTypes参数,bridge method  {@link ReflectUtils#getMethod(Class, String, Class[])}
+     *
      * @param clazz
      * @param methodName
      * @param paramTypes
      * @return
      */
     public static Method getDeclaredMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) {
-        AssertUtils.ifNull(clazz, () -> "参数clazz不能为空", null);
-        AssertUtils.ifNull(methodName, () -> "参数methodName不能为空", null);
+        AssertUtils.notNull(clazz, "参数clazz不能为空");
+        AssertUtils.notNull(methodName, "参数methodName不能为空");
+
         try {
             return clazz.getDeclaredMethod(methodName, paramTypes);
         } catch (NoSuchMethodException e) {
+            return null;
+        } catch (SecurityException e) {
             return null;
         }
     }
 
     /*
      * check方法签名是否相同
-     * @param left
-     * @param right
-     * @return
      */
     private static boolean checkMethodSignature(Method left, Method right) {
         if(left == null || right == null) return false;
@@ -208,14 +218,15 @@ public abstract class ReflectUtils {
         return results;
     }
 
-    /*
+    /**
      * Class Object是一个interface，通过Class.getMethods发现interface及其继承结构上的所有方法;采用BFS搜索继承结构中的static方法
      * 同时过滤掉bridge method
-     * @param interfaceClazz
-     * @return
+     * @param interfaceClazz interface Class
+     * @return Method数组
      */
     public static Method[] findAllDeclaredMethodOnInterfaces(Class<?> interfaceClazz){
-        AssertUtils.notNull(interfaceClazz, () -> "参数clazz不能为空", null);
+        AssertUtils.notNull(interfaceClazz, "参数clazz不能为空");
+
         List<Method> rawResult = new ArrayList<>();
         List<Method> result = new ArrayList<>();
 

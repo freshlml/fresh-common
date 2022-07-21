@@ -19,6 +19,7 @@ public class ClazzTest {
         superTest();
         forTest();
 
+        testGetField();
 
 
     }
@@ -176,9 +177,68 @@ public class ClazzTest {
     }
 
 
+    interface Field_B {
+        String depth = "b";
+
+        String same_name_bl = "b";
+    }
+    interface Filed_A_Super {
+        public static String recursive = "a_super";
+
+        String depth = "a_super";
+    }
+    interface Field_A extends Filed_A_Super {
+        String recursive = "a";
+
+        String same_name_bl = "a";
+    }
+    private static class Field_Super {
+        public String same_name_bl;
+    }
+    private static class GetFieldTest extends Field_Super implements Field_A, Field_B {
+
+        public static String static_bl = "static_bl";
+        public String non_static_bl;
+
+        public String same_name_bl;
 
 
+        private String private_bl;
+        private static String static_private_bl;
+    }
+    private static void testGetField() throws NoSuchFieldException {
 
+        //static field
+        Field static_bl = GetFieldTest.class.getField("static_bl");
+        Field non_static_bl = GetFieldTest.class.getField("non_static_bl");
+
+        //superinterface, 先根深度递归, 查找路径: GetFieldTest,Field_A,Field_A_Super,Field_B; Field_Super; Object
+        Field recursive_field = GetFieldTest.class.getField("recursive");
+        Field depth_field = GetFieldTest.class.getField("depth");
+
+        //相同名称field
+        Field same_name_field = GetFieldTest.class.getField("same_name_bl");
+
+
+        //所有field
+        Field[] all_fields = GetFieldTest.class.getFields();
+
+
+        //declared语义
+        try {
+            Field null_recursive = GetFieldTest.class.getDeclaredField("recursive");
+        } catch (NoSuchFieldException e) {
+            //can not find in super
+        }
+        Field private_bl_field = GetFieldTest.class.getDeclaredField("private_bl");
+        Field static_private_bl_field = GetFieldTest.class.getDeclaredField("static_private_bl");
+
+        Field[] all_declared_field = GetFieldTest.class.getDeclaredFields();
+
+
+        System.out.println("-----------testGetField-----------\n");
+
+    }
 
 
 
