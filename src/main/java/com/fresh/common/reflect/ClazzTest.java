@@ -328,13 +328,18 @@ public class ClazzTest {
                 System.out.println("--------var start");
                 System.out.println(this.getClass().getEnclosingMethod());
                 System.out.println(this.getClass().getEnclosingClass());
+                //System.out.println(TestForInnerClazz.this);
                 System.out.println("--------var end");
             }
         };
 
 
         {
-            class local_inner_1 {}
+            class local_inner_1 {
+                public void m() {
+                    //System.out.println(TestForInnerClazz.class);
+                }
+            }
             AnonymousTest anonymousTest = new AnonymousTest() {
                 @Override
                 public void m() {}
