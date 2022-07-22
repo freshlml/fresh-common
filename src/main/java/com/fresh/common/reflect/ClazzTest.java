@@ -22,6 +22,8 @@ public class ClazzTest {
         testGetField();
         testGetMethod();
 
+        testInnerClazz();
+
     }
 
     //获取Class
@@ -313,7 +315,76 @@ public class ClazzTest {
         Method[] declared_methods = TestGetMethod.class.getDeclaredMethods();
 
 
-        System.out.println("-----------testGetMethod-------------");
+        System.out.println("-----------testGetMethod-------------\n");
+    }
+
+
+    private static abstract class AnonymousTest {public abstract void m();}
+    private static class TestForInnerClazz {
+
+        public AnonymousTest anonymousTest = new AnonymousTest() {
+            @Override
+            public void m() {
+                System.out.println("--------var start");
+                System.out.println(this.getClass().getEnclosingMethod());
+                System.out.println(this.getClass().getEnclosingClass());
+                System.out.println("--------var end");
+            }
+        };
+
+
+        {
+            class local_inner_1 {}
+            AnonymousTest anonymousTest = new AnonymousTest() {
+                @Override
+                public void m() {}
+            };
+
+            System.out.println("--------static start");
+            System.out.println(local_inner_1.class.getEnclosingMethod());
+            System.out.println(local_inner_1.class.getEnclosingClass());
+
+            System.out.println(anonymousTest.getClass().getEnclosingMethod());
+            System.out.println(anonymousTest.getClass().getEnclosingClass());
+            System.out.println("--------static end");
+        }
+        public void method() {
+            class local_inner_2 {}
+            AnonymousTest anonymousTest = new AnonymousTest() {
+                @Override
+                public void m() {}
+            };
+
+            System.out.println("--------method start");
+            System.out.println(local_inner_2.class.getEnclosingMethod());
+            System.out.println(local_inner_2.class.getEnclosingClass());
+
+            System.out.println(anonymousTest.getClass().getEnclosingMethod());
+            System.out.println(anonymousTest.getClass().getEnclosingClass());
+            System.out.println("--------method end");
+        }
+
+
+        public class NonStaticMemberInner {}
+
+        public static class StaticMemberInner {}
+    }
+    private static void testInnerClazz() {
+
+        TestForInnerClazz testForInnerClazz = new TestForInnerClazz();
+        testForInnerClazz.anonymousTest.m();
+        testForInnerClazz.method();
+
+        Class<TestForInnerClazz.NonStaticMemberInner> nonStaticMemberInnerClazz = TestForInnerClazz.NonStaticMemberInner.class;
+        System.out.println(nonStaticMemberInnerClazz.getDeclaringClass());
+        System.out.println(nonStaticMemberInnerClazz.getEnclosingClass());
+
+        Class<TestForInnerClazz.StaticMemberInner> staticMemberInnerClazz = TestForInnerClazz.StaticMemberInner.class;
+        System.out.println(staticMemberInnerClazz.getDeclaringClass());
+        System.out.println(staticMemberInnerClazz.getEnclosingClass());
+
+
+        System.out.println("----------testInnerClazz------------\n");
     }
 
 }
