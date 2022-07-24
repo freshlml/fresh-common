@@ -314,6 +314,7 @@ public class ClazzTest {
 
         Method[] declared_methods = TestGetMethod.class.getDeclaredMethods();
 
+        Method[] i_declared_methods = I.class.getDeclaredMethods();
 
         System.out.println("-----------testGetMethod-------------\n");
     }
