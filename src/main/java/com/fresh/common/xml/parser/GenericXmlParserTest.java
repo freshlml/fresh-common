@@ -12,17 +12,17 @@ import java.io.InputStream;
 public class GenericXmlParserTest {
 
     public static void main(String argv[]) throws Exception {
-        InputStream in1 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/sc/common/xml/validate_no_namespace_test.xml");
+        InputStream in1 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/fresh/common/xml/validate_no_namespace_test.xml");
 
         GenericXmlParser noVlaidator = GenericXmlParser.ofNoValidator(in1, false, new DefaultErrorHandler());
         //out(noVlaidator.getDocument());
 
-        InputStream in2 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/sc/common/xml/validate_test.xml");
-        GenericXmlParser dtd = GenericXmlParser.ofDTD(in2, false, new ClasspathEntityResolver("com/sc/common/xml/*.dtd"), new DefaultErrorHandler());
+        InputStream in2 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/fresh/common/xml/validate_test.xml");
+        GenericXmlParser dtd = GenericXmlParser.ofDTD(in2, false, new ClasspathEntityResolver("com/fresh/common/xml/*.dtd"), new DefaultErrorHandler());
         //out(dtd.getDocument());
 
-        InputStream in3 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/sc/common/xml/validate_schema_test_2.xml");
-        GenericXmlParser xsd = GenericXmlParser.ofSchema(in3, new ClasspathEntityResolver("com/sc/common/xml/*.xsd"), new DefaultErrorHandler());
+        InputStream in3 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/fresh/common/xml/validate_schema_test_2.xml");
+        GenericXmlParser xsd = GenericXmlParser.ofSchema(in3, new ClasspathEntityResolver("com/fresh/common/xml/*.xsd"), new DefaultErrorHandler());
         out(xsd.getDocument());
 
     }

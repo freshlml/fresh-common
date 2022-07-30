@@ -17,21 +17,21 @@ public class GenericSAXParserTest {
 
     public static void main(String argv[]) throws Exception {
 
-        InputStream in1 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/sc/common/xml/validate_no_namespace_test.xml");
+        InputStream in1 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/fresh/common/xml/validate_no_namespace_test.xml");
         GenericSAXParser noValidator = GenericSAXParser.ofNoValidator(true);
         //SAXParser noValidatorParser = noValidator.buildSAXParser();
         //noValidatorParser.parse(in1, new OutHandler(null, new DefaultErrorHandler()));
 
 
-        InputStream in2 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/sc/common/xml/validate_test.xml");
+        InputStream in2 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/fresh/common/xml/validate_test.xml");
         GenericSAXParser dtd = GenericSAXParser.ofDTD(false);
         //SAXParser dtdParser = dtd.buildSAXParser();
         //dtdParser.parse(in2, new OutHandler(new ClasspathEntityResolver("com/freshjuice/fl/xml/*.dtd"), new DefaultErrorHandler()));
 
-        InputStream in3 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/sc/common/xml/validate_schema_test_2.xml");
+        InputStream in3 = GenericXmlParserTest.class.getClassLoader().getResourceAsStream("com/fresh/common/xml/validate_schema_test_2.xml");
         GenericSAXParser xsd = GenericSAXParser.ofSchema(true);
         SAXParser xsdParser = xsd.buildSAXParser();
-        xsdParser.parse(in3, new OutHandler(new ClasspathEntityResolver("com/sc/common/xml/*.xsd"), new DefaultErrorHandler()));
+        xsdParser.parse(in3, new OutHandler(new ClasspathEntityResolver("com/fresh/common/xml/*.xsd"), new DefaultErrorHandler()));
 
 
     }
