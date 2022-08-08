@@ -39,8 +39,8 @@ public class ReflectUtils_raw {
      * @return
      */
     public static Method findDeclaredMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) {
-        AssertUtils.ifNull(clazz, () -> "参数clazz不能为空", null);
-        AssertUtils.ifNull(methodName, () -> "参数methodName不能为空", null);
+        AssertUtils.notNull(clazz, () -> "参数clazz不能为空", null);
+        AssertUtils.notNull(methodName, () -> "参数methodName不能为空", null);
 
         Class<?> currentClazz = clazz;
         while(currentClazz != null && currentClazz != Object.class) {
