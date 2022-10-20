@@ -11,8 +11,10 @@
     </parent>
     <groupId>com.fresh</groupId>
     <artifactId>fresh-common</artifactId>
-    <!-- 当前版本1.0.0，当发生修改后一般也会维持1.0.0不变
-         当改动不能向前兼容时，需要向前推进一个版本号，下层则可以依赖于新版本和旧版本 -->
+    <!-- 若向前兼容式的改动，可以维持版本号不变，也可推进到下一个版本号
+         若改动不向前兼容时，需要推进到下一个版本号
+         当推进到下一个版本号时，应该创建tag指向上一个版本，分支保持当前最新版本的代码
+    -->
     <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>fresh-common</name>
