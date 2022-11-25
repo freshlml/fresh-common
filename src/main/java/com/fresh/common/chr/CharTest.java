@@ -122,7 +122,7 @@ import java.nio.charset.Charset;
  *  String中final char[] value;
  */
 public class CharTest {
-
+    //java中，因为由jvm的存在，其字符的编译，运行过程，@link java/lang/encoding.uxf
     public static void main(String argv[]) {
         //11101010101000110
         //char使用两个字节存储，截断成1101010101000110，54598
