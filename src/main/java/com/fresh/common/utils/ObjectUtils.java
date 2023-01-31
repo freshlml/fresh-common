@@ -2,6 +2,7 @@ package com.fresh.common.utils;
 
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public abstract class ObjectUtils {
 
@@ -11,13 +12,25 @@ public abstract class ObjectUtils {
     private static final String EMPTY_STRING = "";
     private static final String NULL_STRING = "null";
 
-    /*
-     * 比较 declared class(如primitive包装类型, String, 自定义class), 数组(primitive数组, declared class数组) 的相等性
-     * @param o1
-     * @param o2
-     * @return
+
+    /**
+     * Returns true if the two specified object is equal.
+     * The specified object may be array.
+     * The two specified object is equal, if any of the following:
+     * <ul>
+     *     <li>1. same reference(相同的引用)</li>
+     *     <li>2. both are null</li>
+     *     <li>3. o1.equals(o2) has a true return-value</li>
+     *     <li>4. arrayEquals(o1, o2) has a true return-value</li>
+     * </ul>
+     * @see ObjectUtils#arrayEquals(Object, Object) 
+     * @param o1 one specified object
+     * @param o2 another specified object
+     * @return true if the two specified object is equal
      */
     public static boolean objEquals(Object o1, Object o2) {
+        /*if(Objects.equals(o1, o2)) return true;
+        return arrayEquals(o1, o2);*/
         if(o1 == o2) return true;
         if(o1 == null || o2 == null) return false;
         if(o1.equals(o2)) return true;
@@ -27,11 +40,16 @@ public abstract class ObjectUtils {
         return false;
     }
 
-    /*
-     * 判断 primitive数组, declared class数组 的相等性
-     * @param o1
-     * @param o2
-     * @return
+    /**
+     * Returns true if the two specified array object is equal.
+     * If any of the two specified object is not array, return false.
+     * The two specified array object is equal, if any of the following:
+     * <ul>
+     *     <li>Arrays.equals(o1, o2) has a true return-value</li>
+     * </ul>
+     * @param o1 one specified object
+     * @param o2 another specified object
+     * @return true if the two specified array object is equal
      */
     public static boolean arrayEquals(Object o1, Object o2) {
         if(boolean[].class == o1.getClass() && boolean[].class == o2.getClass()) {
@@ -65,79 +83,16 @@ public abstract class ObjectUtils {
         return false;
     }
 
-    public static int objHashCode(boolean[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(boolean b : o) {
-            hash = MULTIPLIER * hash + Boolean.hashCode(b);
-        }
-        return hash;
-    }
-    public static int objHashCode(byte[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(byte b : o) {
-            hash = MULTIPLIER * hash + b;
-        }
-        return hash;
-    }
-    public static int objHashCode(char[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(char c : o) {
-            hash = MULTIPLIER * hash + c;
-        }
-        return hash;
-    }
-    public static int objHashCode(float[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(float f : o) {
-            hash = MULTIPLIER * hash + Float.hashCode(f);
-        }
-        return hash;
-    }
-    public static int objHashCode(double[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(double d : o) {
-            hash = MULTIPLIER * hash + Double.hashCode(d);
-        }
-        return hash;
-    }
-    public static int objHashCode(short[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(short s : o) {
-            hash = MULTIPLIER * hash + Short.hashCode(s);
-        }
-        return hash;
-    }
-    public static int objHashCode(int[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(int i : o) {
-            hash = MULTIPLIER * hash + Integer.hashCode(i);
-        }
-        return hash;
-    }
-    public static int objHashCode(long[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(long l : o) {
-            hash = MULTIPLIER * hash + Long.hashCode(l);
-        }
-        return hash;
-    }
-    public static int objHashCode(Object[] o) {
-        if(o == null) return 0;
-        int hash = INITIAL_HASH;
-        for(Object l : o) {
-            hash = MULTIPLIER * hash + l.hashCode();
-        }
-        return hash;
-    }
-    //计算Object的hashCode
+
+    /**
+     * Returns hash code value of the specified object.
+     * If the specified object is null, return 0, else
+     * if the specified object is not an array, return o.hashCode(), else
+     * return objHashCode(o)
+     *
+     * @param o the specified object
+     * @return  hash code value of the specified object
+     */
     public static int objHashCode(Object o) {
         if (o == null) return 0;
         if(o.getClass().isArray()) {
@@ -171,6 +126,89 @@ public abstract class ObjectUtils {
         }
         return o.hashCode();
     }
+
+    //Arrays#hashCode(boolean[])
+    public static int objHashCode(boolean[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(boolean b : o) {
+            hash = MULTIPLIER * hash + Boolean.hashCode(b);
+        }
+        return hash;
+    }
+    //Arrays#hashCode(byte[])
+    public static int objHashCode(byte[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(byte b : o) {
+            hash = MULTIPLIER * hash + b;
+        }
+        return hash;
+    }
+    //Arrays#hashCode(char[])
+    public static int objHashCode(char[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(char c : o) {
+            hash = MULTIPLIER * hash + c;
+        }
+        return hash;
+    }
+    //Arrays#hashCode(short[])
+    public static int objHashCode(short[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(short s : o) {
+            hash = MULTIPLIER * hash + Short.hashCode(s);
+        }
+        return hash;
+    }
+    //Arrays#hashCode(int[])
+    public static int objHashCode(int[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(int i : o) {
+            hash = MULTIPLIER * hash + Integer.hashCode(i);
+        }
+        return hash;
+    }
+    //Arrays#hashCode(long[])
+    public static int objHashCode(long[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(long l : o) {
+            hash = MULTIPLIER * hash + Long.hashCode(l);
+        }
+        return hash;
+    }
+    //Arrays#hashCode(float[])
+    public static int objHashCode(float[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(float f : o) {
+            hash = MULTIPLIER * hash + Float.hashCode(f);
+        }
+        return hash;
+    }
+    //Arrays#hashCode(double[])
+    public static int objHashCode(double[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(double d : o) {
+            hash = MULTIPLIER * hash + Double.hashCode(d);
+        }
+        return hash;
+    }
+    //Arrays#hashCode(Object[])
+    public static int objHashCode(Object[] o) {
+        if(o == null) return 0;
+        int hash = INITIAL_HASH;
+        for(Object l : o) {
+            hash = MULTIPLIER * hash + (l == null ? 0 : l.hashCode());
+        }
+        return hash;
+    }
+
 
 
     public static String objToString(Object obj) {
