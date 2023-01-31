@@ -42,11 +42,8 @@ public abstract class ObjectUtils {
 
     /**
      * Returns true if the two specified array object is equal.
-     * If any of the two specified object is not array, return false.
-     * The two specified array object is equal, if any of the following:
-     * <ul>
-     *     <li>Arrays.equals(o1, o2) has a true return-value</li>
-     * </ul>
+     * If the two specified object is array with same type and Arrays.equals(o1, o2) has a true return-value, return true
+     *
      * @param o1 one specified object
      * @param o2 another specified object
      * @return true if the two specified array object is equal
