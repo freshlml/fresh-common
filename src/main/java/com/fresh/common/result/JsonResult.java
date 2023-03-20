@@ -40,7 +40,6 @@ import java.util.List;
  *          }
  *      ]
  *  }
- * @param <T> 数据的类型
  */
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class JsonResult<T> {
@@ -80,7 +79,7 @@ public class JsonResult<T> {
 
 
     public static <T> JsonResult<T> buildSuccessResult(T data) {
-        JsonResult<T> result = new JsonResult<>();
+        JsonResult<T> result = new JsonResult<T>();
         result.setSuccess(true);
         result.setCode(JsonResultEnum.SUCCESS.getCode());
         result.setMessage(JsonResultEnum.SUCCESS.getText());
@@ -89,12 +88,12 @@ public class JsonResult<T> {
     }
 
     //for com.baomidou.mybatisplus.core.metadata.IPage
-    public static <T> JsonResult<PageJsonResultVo> buildSuccessResult(long current,
-                                                                      long size,
-                                                                      long pages,
-                                                                      long total,
-                                                                      List<T> records) {
-        JsonResult<PageJsonResultVo> result = new JsonResult<>();
+    public static <T> JsonResult<PageJsonResultVo<T>> buildSuccessResult(long current,
+                                                    long size,
+                                                    long pages,
+                                                    long total,
+                                                    List<T> records) {
+        JsonResult<PageJsonResultVo<T>> result = new JsonResult<PageJsonResultVo<T>>();
         result.setSuccess(true);
         result.setCode(JsonResultEnum.SUCCESS.getCode());
         result.setMessage(JsonResultEnum.SUCCESS.getText());
@@ -108,8 +107,8 @@ public class JsonResult<T> {
         return result;
     }
 
-    public static <T> JsonResult<PageJsonResultVo> buildSuccessResult(PageJsonResultVo pageJsonResultVo) {
-        JsonResult<PageJsonResultVo> result = new JsonResult<>();
+    public static <T> JsonResult<PageJsonResultVo<T>> buildSuccessResult(PageJsonResultVo<T> pageJsonResultVo) {
+        JsonResult<PageJsonResultVo<T>> result = new JsonResult<PageJsonResultVo<T>>();
         result.setSuccess(true);
         result.setCode(JsonResultEnum.SUCCESS.getCode());
         result.setMessage(JsonResultEnum.SUCCESS.getText());
@@ -118,8 +117,8 @@ public class JsonResult<T> {
     }
 
 
-    protected static JsonResult<?> buildResult(String code, String message, boolean success) {
-        JsonResult<?> jsonResult = new JsonResult();
+    protected static JsonResult<Object> buildResult(String code, String message, boolean success) {
+        JsonResult<Object> jsonResult = new JsonResult<Object>();
         jsonResult.setCode(code);
         jsonResult.setMessage(message);
         jsonResult.setSuccess(success);
@@ -128,15 +127,15 @@ public class JsonResult<T> {
     }
 
 
-    public static JsonResult buildSuccessResult(String message) {
+    public static JsonResult<Object> buildSuccessResult(String message) {
         return buildResult(JsonResultEnum.SUCCESS.getCode(), message, true);
     }
 
-    public static JsonResult buildFailedResult(String message) {
+    public static JsonResult<Object> buildFailedResult(String message) {
         return buildResult(JsonResultEnum.FAIL.getCode(), message, false);
     }
 
-    public static JsonResult buildFailedResult(String code, String message) {
+    public static JsonResult<Object> buildFailedResult(String code, String message) {
         return buildResult(code, message, false);
     }
 
