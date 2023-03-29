@@ -87,6 +87,7 @@ public class JsonResult<T> {
         return result;
     }
 
+
     //for com.baomidou.mybatisplus.core.metadata.IPage
     public static <T> JsonResult<PageJsonResultVo<T>> buildSuccessResult(long current,
                                                     long size,
@@ -117,8 +118,8 @@ public class JsonResult<T> {
     }
 
 
-    protected static JsonResult<Object> buildResult(String code, String message, boolean success) {
-        JsonResult<Object> jsonResult = new JsonResult<Object>();
+    protected static <T> JsonResult<T>  buildResult(String code, String message, boolean success) {
+        JsonResult<T> jsonResult = new JsonResult<T>();
         jsonResult.setCode(code);
         jsonResult.setMessage(message);
         jsonResult.setSuccess(success);
@@ -127,15 +128,15 @@ public class JsonResult<T> {
     }
 
 
-    public static JsonResult<Object> buildSuccessResult(String message) {
+    public static <T> JsonResult<T>  buildSuccessResult(String message) {
         return buildResult(JsonResultEnum.SUCCESS.getCode(), message, true);
     }
 
-    public static JsonResult<Object> buildFailedResult(String message) {
+    public static <T> JsonResult<T>  buildFailedResult(String message) {
         return buildResult(JsonResultEnum.FAIL.getCode(), message, false);
     }
 
-    public static JsonResult<Object> buildFailedResult(String code, String message) {
+    public static <T> JsonResult<T> buildFailedResult(String code, String message) {
         return buildResult(code, message, false);
     }
 
