@@ -11,10 +11,9 @@
     </parent>
     <groupId>com.fresh</groupId>
     <artifactId>fresh-common</artifactId>
-    <!-- 若向前兼容式的改动，可以维持版本号不变，也可推进到下一个版本号
-         若改动不向前兼容时，需要推进到下一个版本号
-         当推进到下一个版本号时，应该创建tag指向上一个版本，分支保持当前最新版本的代码
-    -->
+    <!-- 通过变更版本号并存多个版本，与git分支相对应
+     如，git分支 1.0.x 表示此pom的 1.0.x 版本
+     -->
     <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>fresh-common</name>
