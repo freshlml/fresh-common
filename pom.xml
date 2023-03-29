@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.fresh</groupId>
         <artifactId>fresh-common-dependencies</artifactId>
-        <version>1.0.0</version> <!-- 此处引用的fresh-common-dependencies版本 -->
+        <version>1.0.0</version>
     </parent>
     <groupId>com.fresh</groupId>
     <artifactId>fresh-common</artifactId>
