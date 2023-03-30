@@ -88,8 +88,8 @@ public class JsonResult<T> {
     }
 
 
-    //for com.baomidou.mybatisplus.core.metadata.IPage
-    public static <T> JsonResult<PageJsonResultVo<T>> buildSuccessResult(long current,
+    public static <T> JsonResult<PageJsonResultVo<T>> buildSuccessResult(
+                                                    long current,
                                                     long size,
                                                     long pages,
                                                     long total,
