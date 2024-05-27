@@ -347,6 +347,7 @@ public abstract class ReflectUtils {
             Method result = methodProcessor.handler(method, depth);
             if(result != null) return result;
         }
+        if(methodProcessor.afterCrash(clazz, methods)) return null;
 
         Class<?> superClazz = clazz.getSuperclass();
         if(superClazz != null) {
@@ -367,6 +368,7 @@ public abstract class ReflectUtils {
         Method handler(Method method, int depth);
         default List<Method> results() { return new ArrayList<>(); }
         default boolean crash(Class<?> clazz, int depth) {return false;}
+        default boolean afterCrash(Class<?> clazz, Method[] methods) { return false; }
     }
 
     public static class MatchFirstMethodProcessor implements MethodRecursiveProcessor {
@@ -440,6 +442,10 @@ public abstract class ReflectUtils {
         public List<Method> results() {
             return collects;
         }
+
+        protected Predicate<Method> getExclude() { return this.exclude; }
+
+        protected Consumer<Method> getConsumer() { return this.consumer; }
     }
 
     public static final class DetectOverrideCollectsMethodProcessor extends CollectsMethodProcessor {
@@ -488,7 +494,42 @@ public abstract class ReflectUtils {
 
     }
 
+    public static final class MethodPriorityCollectsMethodProcessor extends CollectsMethodProcessor {
 
+        private final Class<?> originalClazz;
+        private boolean findOne = false;
+
+        public MethodPriorityCollectsMethodProcessor(Class<?> originalClazz, Consumer<Method> consumer, String methodName, Class<?>... paramTypes) {
+            super(consumer, (Method method) -> method.isBridge() || !(method.getName().equals(methodName) &&
+                                                                     ((paramTypes == null && method.getParameterCount()==0) ||
+                                                                      (paramTypes != null && Arrays.equals(method.getParameterTypes(), paramTypes)))));
+            this.originalClazz = originalClazz;
+        }
+
+        @Override
+        public Method handler(Method method, int depth) {
+            if(getExclude() != null && getExclude().test(method)) return null;
+
+            if(getConsumer() != null) getConsumer().accept(method);
+
+            if(method.getDeclaringClass() == originalClazz) return method;
+            if(!method.getDeclaringClass().isInterface() && !Modifier.isAbstract(method.getModifiers())) return method;
+
+            results().add(method);
+            this.findOne = true;
+
+            return null;
+        }
+
+        @Override
+        public boolean afterCrash(Class<?> clazz, Method[] methods) {
+            if(findOne) {
+                findOne = false;
+                return true;
+            }
+            return false;
+        }
+    }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Field
@@ -790,6 +831,7 @@ public abstract class ReflectUtils {
             Field result = recursiveProcessor.handler(field, depth);
             if(result != null) return result;
         }
+        if(recursiveProcessor.afterCrash(clazz, fields)) return null;
 
         Class<?>[] interfaces = clazz.getInterfaces();
         for(Class<?> inter : interfaces) {
@@ -811,6 +853,7 @@ public abstract class ReflectUtils {
         Field handler(Field field, int depth);
         default List<Field> results() { return new ArrayList<>(); }
         default boolean crash(Class<?> clazz, int depth) {return false;}
+        default boolean afterCrash(Class<?> clazz, Field[] fields) {return false;}
     }
 
     public static class MatchFirstFieldProcessor implements FieldRecursiveProcessor {
@@ -856,6 +899,9 @@ public abstract class ReflectUtils {
             return collects;
         }
 
+        protected Consumer<Field> getConsumer() {return this.consumer;}
+
+        protected Predicate<Field> getExclude() { return this.exclude; }
     }
 
     public static class DepthCrashCollectsFieldProcessor extends CollectsFieldProcessor {
@@ -876,7 +922,39 @@ public abstract class ReflectUtils {
         }
     }
 
+    public static class FieldPriorityCollectsFieldProcessor extends CollectsFieldProcessor {
 
+        private final Class<?> originalClazz;
+        private boolean findOne = false;
+
+        public FieldPriorityCollectsFieldProcessor(Consumer<Field> consumer, String name, Class<?> originalClazz) {
+            super(consumer, field -> !field.getName().equals(name));
+            this.originalClazz = originalClazz;
+        }
+
+        @Override
+        public Field handler(Field field, int depth) {
+            if(getExclude() != null && getExclude().test(field)) return null;
+
+            if(getConsumer() != null) getConsumer().accept(field);
+
+            if(field.getDeclaringClass() == originalClazz) return field;
+
+            results().add(field);
+            this.findOne = true;
+
+            return null;
+        }
+
+        @Override
+        public boolean afterCrash(Class<?> clazz, Field[] fields) {
+            if(this.findOne) {
+                findOne = false;
+                return true;
+            }
+            return false;
+        }
+    }
 
 
 }
