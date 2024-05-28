@@ -6,6 +6,7 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class ReflectUtils {
@@ -828,10 +829,12 @@ public abstract class ReflectUtils {
 
         Field[] fields = clazz.getDeclaredFields();
         for(Field field : fields) {
-            Field result = recursiveProcessor.handler(field, depth);
+            Field result = recursiveProcessor.handle(field, depth);
             if(result != null) return result;
+
+            if(recursiveProcessor.breaking(clazz, fields, field)) break;
         }
-        if(recursiveProcessor.afterCrash(clazz, fields)) return null;
+        if(recursiveProcessor.afterCrash(clazz, depth, fields)) return null;
 
         Class<?>[] interfaces = clazz.getInterfaces();
         for(Class<?> inter : interfaces) {
@@ -850,12 +853,77 @@ public abstract class ReflectUtils {
 
 
     interface FieldRecursiveProcessor {
-        Field handler(Field field, int depth);
+        Field handle(Field field, int depth);
         default List<Field> results() { return new ArrayList<>(); }
         default boolean crash(Class<?> clazz, int depth) {return false;}
-        default boolean afterCrash(Class<?> clazz, Field[] fields) {return false;}
+
+        default boolean breaking(Class<?> clazz, Field[] fields, Field field) {return false;}
+        default boolean afterCrash(Class<?> clazz, int depth, Field[] fields) {return false;}
     }
 
+    public abstract static class AbstractFieldRecursiveProcessor implements FieldRecursiveProcessor {
+        private final Predicate<Field> predicate;
+        private boolean breaking = false;
+        private boolean afterCrashing = false;
+
+        public AbstractFieldRecursiveProcessor(Predicate<Field> predicate) {
+            AssertUtils.notNull(predicate, "参数predicate不能为空");
+            this.predicate = predicate;
+        }
+
+        @Override
+        public Field handle(Field field, int depth) {
+            boolean checkedResult = check(field);
+
+            return handlerInternal(field, depth, checkedResult);
+        }
+
+        protected boolean check(Field field) {
+            return predicate.test(field);
+        }
+
+        protected abstract Field handlerInternal(Field field, int depth, boolean checkedResult);
+
+        @Override
+        public boolean breaking(Class<?> clazz, Field[] fields, Field field) {
+            if(breaking) {
+                breaking = false;   //reset
+                return true;
+            }
+            return false;
+        }
+
+        protected void setBreaking(boolean breaking) {
+            this.breaking = breaking;
+        }
+
+        @Override
+        public boolean afterCrash(Class<?> clazz, int depth, Field[] fields) {
+            if(afterCrashing /*|| (fields == null || fields.length == 0)*/) {
+                afterCrashing = false;    //reset
+                return true;
+            }
+            return false;
+        }
+
+        protected void setAfterCrashing(boolean afterCrashing) {
+            this.afterCrashing = afterCrashing;
+        }
+    }
+
+    public static class MatchingFirstFieldProcessor extends AbstractFieldRecursiveProcessor {
+
+        public MatchingFirstFieldProcessor(Predicate<Field> predicate) {
+            super(predicate);
+        }
+
+        @Override
+        protected Field handlerInternal(Field field, int depth, boolean checkedResult) {
+            return checkedResult ? field : null;
+        }
+    }
+
+    @Deprecated
     public static class MatchFirstFieldProcessor implements FieldRecursiveProcessor {
         private final Predicate<Field> predicate;
 
@@ -864,7 +932,7 @@ public abstract class ReflectUtils {
             this.predicate = predicate;
         }
         @Override
-        public Field handler(Field field, int depth) {
+        public Field handle(Field field, int depth) {
             if(predicate.test(field)) {
                 return field;
             }
@@ -873,6 +941,48 @@ public abstract class ReflectUtils {
         }
     }
 
+    public static class CollectFieldsProcessor extends AbstractFieldRecursiveProcessor {
+        private final List<Field> collects = new ArrayList<>();
+        private final Function<Field, Field> function;
+
+        public CollectFieldsProcessor(Predicate<Field> predicate, Function<Field, Field> function) {
+            super(predicate);
+            this.function = function;
+        }
+
+        @Override
+        protected Field handlerInternal(Field field, int depth, boolean checkedResult) {
+            if(!checkedResult) return null;
+
+            if(function != null) field = function.apply(field);
+
+            if(ending(field, depth)) return field;
+
+            collects.add(field);
+            determineBreaking(field, depth);
+            determineAfterCrashing(field, depth);
+
+            return null;
+        }
+
+        protected boolean ending(Field field, int depth) {
+            return false;
+        }
+        protected void determineBreaking(Field field, int depth) {
+            //setBreaking(false);
+        }
+        protected void determineAfterCrashing(Field field, int depth) {
+            //setAfterCrashing(false);
+        }
+
+        @Override
+        public List<Field> results() {
+            return collects;
+        }
+
+    }
+
+    @Deprecated
     public static class CollectsFieldProcessor implements FieldRecursiveProcessor {
         private final List<Field> collects = new ArrayList<>();
         private Consumer<Field> consumer;
@@ -885,7 +995,7 @@ public abstract class ReflectUtils {
         }
 
         @Override
-        public Field handler(Field field, int depth) {
+        public Field handle(Field field, int depth) {
             if(exclude != null && exclude.test(field)) return null;
 
             if(consumer != null) consumer.accept(field);
@@ -904,6 +1014,21 @@ public abstract class ReflectUtils {
         protected Predicate<Field> getExclude() { return this.exclude; }
     }
 
+    public static class DepthCrashCollectFieldsProcessor extends CollectFieldsProcessor {
+        private final int crashDepth;
+
+        public DepthCrashCollectFieldsProcessor(Predicate<Field> predicate, Function<Field, Field> function, int crashDepth) {
+            super(predicate, function);
+            this.crashDepth = crashDepth;
+        }
+        @Override
+        public boolean crash(Class<?> clazz, int depth) {
+            return depth >= crashDepth;
+        }
+
+    }
+
+    @Deprecated
     public static class DepthCrashCollectsFieldProcessor extends CollectsFieldProcessor {
         private final int crashDepth;
 
@@ -922,37 +1047,25 @@ public abstract class ReflectUtils {
         }
     }
 
-    public static class FieldPriorityCollectsFieldProcessor extends CollectsFieldProcessor {
+    public static class FieldPriorityCollectFieldsProcessor extends CollectFieldsProcessor {
 
-        private final Class<?> originalClazz;
-        private boolean findOne = false;
-
-        public FieldPriorityCollectsFieldProcessor(Consumer<Field> consumer, String name, Class<?> originalClazz) {
-            super(consumer, field -> !field.getName().equals(name));
-            this.originalClazz = originalClazz;
+        public FieldPriorityCollectFieldsProcessor(Function<Field, Field> function, String name) {
+            super(field -> field.getName().equals(name), function);
         }
 
         @Override
-        public Field handler(Field field, int depth) {
-            if(getExclude() != null && getExclude().test(field)) return null;
-
-            if(getConsumer() != null) getConsumer().accept(field);
-
-            if(field.getDeclaringClass() == originalClazz) return field;
-
-            results().add(field);
-            this.findOne = true;
-
-            return null;
+        protected boolean ending(Field field, int depth) {
+            return depth==0;
         }
 
         @Override
-        public boolean afterCrash(Class<?> clazz, Field[] fields) {
-            if(this.findOne) {
-                findOne = false;
-                return true;
-            }
-            return false;
+        protected void determineBreaking(Field field, int depth) {
+            setBreaking(true);
+        }
+
+        @Override
+        protected void determineAfterCrashing(Field field, int depth) {
+            setAfterCrashing(true);
         }
     }
 
