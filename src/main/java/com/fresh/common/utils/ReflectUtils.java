@@ -827,6 +827,8 @@ public abstract class ReflectUtils {
     public static Field findDeclaredFieldSemantics(Class<?> clazz, FieldRecursiveProcessor recursiveProcessor, int depth) throws SecurityException {
         if(recursiveProcessor.crash(clazz, depth)) return null;
 
+        recursiveProcessor.checkSamePackage(clazz, depth);
+
         Field[] fields = clazz.getDeclaredFields();
         for(Field field : fields) {
             Field result = recursiveProcessor.handle(field, depth);
@@ -859,12 +861,16 @@ public abstract class ReflectUtils {
 
         default boolean breaking(Class<?> clazz, Field[] fields, Field field) {return false;}
         default boolean afterCrash(Class<?> clazz, int depth, Field[] fields) {return false;}
+
+        default void checkSamePackage(Class<?> clazz, int depth) {}
     }
 
     public abstract static class AbstractFieldRecursiveProcessor implements FieldRecursiveProcessor {
         private final Predicate<Field> predicate;
         private boolean breaking = false;
         private boolean afterCrashing = false;
+        protected boolean samePackage = true;
+        private String prevPackageName = null;
 
         public AbstractFieldRecursiveProcessor(Predicate<Field> predicate) {
             AssertUtils.notNull(predicate, "参数predicate不能为空");
@@ -872,13 +878,27 @@ public abstract class ReflectUtils {
         }
 
         @Override
+        public void checkSamePackage(Class<?> clazz, int depth) {
+            if(!clazz.isInterface() && samePackage) {
+                if(prevPackageName == null) {  //if(depth == 0) {
+                    prevPackageName = clazz.getPackage().getName();
+                } else if(!clazz.getPackage().getName().equals(prevPackageName)) {
+                    samePackage = false;
+                    //prevPackageName = "";
+                } else {
+                    prevPackageName = clazz.getPackage().getName();
+                }
+            }
+        }
+
+        @Override
         public Field handle(Field field, int depth) {
-            boolean checkedResult = check(field);
+            boolean checkedResult = check(field, depth);
 
             return handlerInternal(field, depth, checkedResult);
         }
 
-        protected boolean check(Field field) {
+        protected boolean check(Field field, int depth) {
             return predicate.test(field);
         }
 
@@ -1051,6 +1071,14 @@ public abstract class ReflectUtils {
 
         public FieldPriorityCollectFieldsProcessor(Function<Field, Field> function, String name) {
             super(field -> field.getName().equals(name), function);
+        }
+
+        @Override
+        protected boolean check(Field field, int depth) {
+            if(!super.check(field, depth)) return false;
+
+            int modifiers = field.getModifiers();
+            return depth == 0 || (!Modifier.isPrivate(modifiers) && (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || samePackage));
         }
 
         @Override
