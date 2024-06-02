@@ -2,7 +2,6 @@ package com.fresh.common.utils;
 
 
 import java.util.Arrays;
-import java.util.Objects;
 
 public abstract class ObjectUtils {
 
@@ -31,7 +30,7 @@ public abstract class ObjectUtils {
     public static boolean objEquals(Object o1, Object o2) {
         /*if(Objects.equals(o1, o2)) return true;
         return arrayEquals(o1, o2);*/
-        if(o1 == o2) return true;
+        if(o1 == o2) return true;  //note: null == null is true
         if(o1 == null || o2 == null) return false;
         if(o1.equals(o2)) return true;
         if(o1.getClass().isArray() && o2.getClass().isArray()) {
@@ -73,7 +72,12 @@ public abstract class ObjectUtils {
         if(long[].class == o1.getClass() && long[].class == o2.getClass()) {
             return Arrays.equals((long[]) o1, (long[]) o2);
         }
-        if(Object[].class.isInstance(o1) && Object[].class.isInstance(o2)) {
+
+        //if(o1.getClass().isArray() && o2.getClass().isArray() &&
+        //  !o1.getClass().getComponentType().isPrimitive() && !o2.getClass().getComponentType().isPrimitive()) { //o1, o2 是引用类型数组
+        //    return Arrays.equals((Object[]) o1, (Object[]) o2);
+        //}
+        if(o1 instanceof Object[] && o2 instanceof Object[]) {
             return Arrays.equals((Object[]) o1, (Object[]) o2);
         }
 
@@ -93,31 +97,31 @@ public abstract class ObjectUtils {
     public static int objHashCode(Object o) {
         if (o == null) return 0;
         if(o.getClass().isArray()) {
-            if(boolean[].class == o) {
+            if(boolean[].class == o.getClass()) {
                 return objHashCode((boolean[]) o);
             }
-            if(byte[].class == o) {
+            if(byte[].class == o.getClass()) {
                 return objHashCode((byte[]) o);
             }
-            if(char[].class == o) {
+            if(char[].class == o.getClass()) {
                 return objHashCode((char[]) o);
             }
-            if(float[].class == o) {
+            if(float[].class == o.getClass()) {
                 return objHashCode((float[]) o);
             }
-            if(double[].class == o) {
+            if(double[].class == o.getClass()) {
                 return objHashCode((double[]) o);
             }
-            if(short[].class == o) {
+            if(short[].class == o.getClass()) {
                 return objHashCode((short[]) o);
             }
-            if(int[].class == o) {
+            if(int[].class == o.getClass()) {
                 return objHashCode((int[]) o);
             }
-            if(long[].class == o) {
+            if(long[].class == o.getClass()) {
                 return objHashCode((long[]) o);
             }
-            if(Object[].class.isInstance(o) ) {
+            if(o instanceof Object[]) {
                 return objHashCode((Object[]) o);
             }
         }
