@@ -28,7 +28,7 @@ public enum SqlKeyword {
     REGEXP("REGEXP"),
     DESC("DESC"),
     ASC("ASC"),
-    END("");
+    TERMINAL("");
 
     private String value;
     SqlKeyword(String keyword) {

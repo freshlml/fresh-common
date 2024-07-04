@@ -25,7 +25,7 @@ public class SqlParserUtil {
             if(c == ')') parentheses--;
         }
 
-        sql = sql.substring(pos, endPos+1) + SqlSyntaxConstant.END;  //IndexOutOfBoundsException if pos == -1
+        sql = sql.substring(pos, endPos+1) + SqlSyntaxConstant.SQL_TERMINAL;  //IndexOutOfBoundsException if pos == -1
 
         return sql;
     }
@@ -52,7 +52,7 @@ public class SqlParserUtil {
             int suffixIdx;
 
             while((suffixIdx = StringUtils.indexOfIgnoreCase(sql, suffix, pos)) != -1) {
-                if(SqlSyntaxConstant.END.equals(suffix)) break;
+                if(SqlSyntaxConstant.SQL_TERMINAL.equals(suffix)) break;
 
                 if(isCharLiteral(sql, prefixStart, suffixIdx) || !keywordBound(sql, suffix, suffixIdx)) {
                     pos = suffixIdx + suffix.length();
@@ -200,7 +200,7 @@ public class SqlParserUtil {
 
         System.out.println(findRelative("seLect seleCt frOm fRom (select * from table) ct;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue()));
 
-        System.out.println(findRelative("select 'select' as `from`, `from`, (select 'select') as no_from;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlSyntaxConstant.END));
+        System.out.println(findRelative("select 'select' as `from`, `from`, (select 'select') as no_from;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlSyntaxConstant.SQL_TERMINAL));
 
     }
 

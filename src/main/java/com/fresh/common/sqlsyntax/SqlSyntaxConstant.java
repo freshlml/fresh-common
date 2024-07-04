@@ -5,7 +5,7 @@ public class SqlSyntaxConstant {
     static final String CR = "\r";
     static final String SPACE = " ";
     static final String COMMA = ",";
-    static final String END = ";";
+    static final String SQL_TERMINAL = ";";
     static final String LEFT_PARENTHESES = "(";
     static final String RIGHT_PARENTHESES = ")";
     static final String SURROUND = "`";
