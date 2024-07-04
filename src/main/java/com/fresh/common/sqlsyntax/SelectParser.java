@@ -11,47 +11,26 @@ public class SelectParser {
     private SelectSyntax selectSyntax;
 
     public SelectParser parse(String sql) {
-        List<SelectNode> nodes = new ArrayList<>();
         sql = SqlParserUtil.redundant(sql, SqlKeyword.SELECT.getValue());
         ParserContext parserContext = new ParserContext(sql, 0);
 
-        SelectNode selectNode = parseSlt(parserContext);
-        nodes.add(selectNode);
+        parseSlt(parserContext);
 
-        SelectNode selectNodeTlt = parseTlt(parserContext);
-        if(selectNodeTlt != null) {
-            nodes.add(selectNodeTlt);
-        }
+        parseTlt(parserContext);
 
-        SelectNode selectNodeWhe = parseWhe(parserContext);
-        if(selectNodeWhe != null) {
-            nodes.add(selectNodeWhe);
-        }
+        parseWhe(parserContext);
 
-        SelectNode selectNodeGb = parseGby(parserContext);
-        if(selectNodeGb != null) {
-            nodes.add(selectNodeGb);
-        }
+        parseGby(parserContext);
 
-        SelectNode selectNodeHv = parseHv(parserContext);
-        if(selectNodeHv != null) {
-            nodes.add(selectNodeHv);
-        }
+        parseHv(parserContext);
 
-        SelectNode selectNodeOb = parseOby(parserContext);
-        if(selectNodeOb != null) {
-            nodes.add(selectNodeOb);
-        }
+        parseOby(parserContext);
 
-        SelectNode selectNodeLt = parseLmt(parserContext);
-        if(selectNodeLt != null) {
-            nodes.add(selectNodeLt);
-        }
+        parseLmt(parserContext);
 
-        SelectNode selectNodeEnd = parseEnd(parserContext);
-        nodes.add(selectNodeEnd);
+        parseEnd(parserContext);
 
-        this.selectSyntax = new SelectSyntax(nodes);
+        this.selectSyntax = parserContext.ofSelectSyntax();
         return this;
     }
 
@@ -63,11 +42,11 @@ public class SelectParser {
         return selectSyntax.pageSql();
     }
 
-    private SelectNode parseEnd(ParserContext parserContext) {
+    private boolean parseEnd(ParserContext parserContext) {
         //END
         String sql = parserContext.getSql();
 
-        int endIdx = StringUtils.indexOf(sql, SqlSyntaxConstant.SQL_TERMINAL, parserContext.getIdx());
+        int endIdx = StringUtils.indexOf(sql, SqlConstant.SQL_TERMINAL, parserContext.getIdx());
         if(endIdx == -1) {
             throw new IllFormedSqlException("non-terminal sql [" + sql + "], idx=" + endIdx);
         }
@@ -76,120 +55,135 @@ public class SelectParser {
         }
         parserContext.setIdx(endIdx+1);
 
-        return new SelectNode(SqlKeyword.TERMINAL, SqlSyntaxConstant.SQL_TERMINAL, null);
+        SelectNode selectNode =  new SelectNode(SqlKeyword.TERMINAL, SqlConstant.SQL_TERMINAL, null);
+        parserContext.add(selectNode);
+        return true;
     }
 
-    private SelectNode parseLmt(ParserContext parserContext) {
+    private boolean parseLmt(ParserContext parserContext) {
         //LIMIT
         String sql = parserContext.getSql();
 
         int limitIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.LIMIT.getValue(), parserContext.getIdx());
-        if(limitIdx == -1 && sql.charAt(parserContext.getIdx()) == SqlSyntaxConstant.SQL_TERMINAL.charAt(0)) {
-            return null;
+        if(limitIdx == -1 && sql.charAt(parserContext.getIdx()) == SqlConstant.SQL_TERMINAL.charAt(0)) {
+            return false;
         } else if(limitIdx == -1) {
             throw new IllFormedSqlException("ill-formed sql [" + sql + "], idx=" + limitIdx);
         }
 
-        int limitIdxEnd = SqlParserUtil.findRelative(sql, limitIdx, SqlKeyword.LIMIT.getValue(), SqlSyntaxConstant.SQL_TERMINAL);
+        int limitIdxEnd = SqlParserUtil.findRelative(sql, limitIdx, SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
         if(limitIdxEnd == -1) throw new IllFormedSqlException("no limit condition [" + sql + "], idx=" + limitIdx);
 
         String limit_condition = sql.substring(limitIdx + SqlKeyword.LIMIT.getValue().length(), limitIdxEnd);
         parserContext.setIdx(limitIdxEnd);
         LimitCondition lcd = new LimitCondition(limit_condition);
 
-        return new SelectNode(SqlKeyword.LIMIT, limit_condition, lcd);
+        SelectNode selectNode =  new SelectNode(SqlKeyword.LIMIT, limit_condition, lcd);
+        parserContext.setExistsLimit(true);
+        parserContext.add(selectNode);
+        return true;
     }
 
-    private SelectNode parseOby(ParserContext parserContext) {
+    private boolean parseOby(ParserContext parserContext) {
         //ORDER_BY_LIST
         String sql = parserContext.getSql();
 
         int orderByIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.ORDER_BY.getValue(), parserContext.getIdx());
-        if(orderByIdx == -1) return null;
+        if(orderByIdx == -1) return false;
 
-        int orderByIdxEnd = SqlParserUtil.findRelative(sql, orderByIdx, SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlSyntaxConstant.SQL_TERMINAL);
+        int orderByIdxEnd = SqlParserUtil.findRelative(sql, orderByIdx, SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
         if(orderByIdxEnd == -1) throw new IllFormedSqlException("no order by list [" + sql + "], idx=" + orderByIdx);
 
         String order_by_list = sql.substring(orderByIdx + SqlKeyword.ORDER_BY.getValue().length(), orderByIdxEnd);
         parserContext.setIdx(orderByIdxEnd);
 
-        return new SelectNode(SqlKeyword.ORDER_BY, order_by_list, null);
+        SelectNode selectNode =  new SelectNode(SqlKeyword.ORDER_BY, order_by_list, null);
+        parserContext.add(selectNode);
+        return true;
     }
 
-    private SelectNode parseHv(ParserContext parserContext) {
+    private boolean parseHv(ParserContext parserContext) {
         //HAVING_CONDITION
         String sql = parserContext.getSql();
 
         int havingIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.HAVING.getValue(), parserContext.getIdx());
-        if(havingIdx == -1) return null;
+        if(havingIdx == -1) return false;
 
         int havingIdxEnd = SqlParserUtil.findRelative(sql, havingIdx, SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(),
-                                                                      SqlKeyword.LIMIT.getValue(), SqlSyntaxConstant.SQL_TERMINAL);
+                                                                      SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
         if(havingIdxEnd == -1) throw new IllFormedSqlException("no having condition [" + sql + "], idx=" + havingIdx);
 
         String having_condition = sql.substring(havingIdx + SqlKeyword.HAVING.getValue().length(), havingIdxEnd);
         parserContext.setIdx(havingIdxEnd);
 
-        return new SelectNode(SqlKeyword.HAVING, having_condition, null);
+        SelectNode selectNode =  new SelectNode(SqlKeyword.HAVING, having_condition, null);
+        parserContext.add(selectNode);
+        return true;
     }
 
-    private SelectNode parseGby(ParserContext parserContext) {
+    private boolean parseGby(ParserContext parserContext) {
         //GROUP_BY_LIST
         String sql = parserContext.getSql();
 
         int groupByIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.GROUP_BY.getValue(), parserContext.getIdx());
-        if(groupByIdx == -1) return null;
+        if(groupByIdx == -1) return false;
 
         int groupByIdxEnd = SqlParserUtil.findRelative(sql, groupByIdx, SqlKeyword.GROUP_BY.getValue(), SqlKeyword.HAVING.getValue(),
-                                               SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlSyntaxConstant.SQL_TERMINAL);
+                                               SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
         if(groupByIdxEnd == -1) throw new IllFormedSqlException("no group by list [" + sql + "], idx=" + groupByIdx);
 
         String group_by_list = sql.substring(groupByIdx + SqlKeyword.GROUP_BY.getValue().length(), groupByIdxEnd);
         parserContext.setIdx(groupByIdxEnd);
 
-        return new SelectNode(SqlKeyword.GROUP_BY, group_by_list, null);
+        SelectNode selectNode =  new SelectNode(SqlKeyword.GROUP_BY, group_by_list, null);
+        parserContext.add(selectNode);
+        return true;
     }
 
-    private SelectNode parseWhe(ParserContext parserContext) {
+    private boolean parseWhe(ParserContext parserContext) {
         //WHERE_CONDITION
         String sql = parserContext.getSql();
 
         int whereIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.WHERE.getValue(), parserContext.getIdx());
-        if(whereIdx == -1) return null;
+        if(whereIdx == -1) return false;
 
         int whereIdxEnd = SqlParserUtil.findRelative(sql, whereIdx, SqlKeyword.WHERE.getValue(), SqlKeyword.GROUP_BY.getValue(),
-                                             SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlSyntaxConstant.SQL_TERMINAL);
+                                             SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
         if(whereIdxEnd == -1) throw new IllFormedSqlException("no where condition [" + sql + "], idx=" + whereIdx);
 
         String where_condition = sql.substring(whereIdx + SqlKeyword.WHERE.getValue().length(), whereIdxEnd);
         parserContext.setIdx(whereIdxEnd);
 
-        return new SelectNode(SqlKeyword.WHERE, where_condition, null);
+        SelectNode selectNode =  new SelectNode(SqlKeyword.WHERE, where_condition, null);
+        parserContext.add(selectNode);
+        return true;
     }
 
-    private SelectNode parseTlt(ParserContext parserContext) {
+    private boolean parseTlt(ParserContext parserContext) {
         //TABLE_LIST
         String sql = parserContext.getSql();
 
         int fromIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.FROM.getValue(), parserContext.getIdx());
-        if(fromIdx == -1 && sql.charAt(parserContext.getIdx()) == SqlSyntaxConstant.SQL_TERMINAL.charAt(0)) {
-            return null;
+        if(fromIdx == -1 && sql.charAt(parserContext.getIdx()) == SqlConstant.SQL_TERMINAL.charAt(0)) {
+            return false;
         } else if(fromIdx == -1) {
             throw new IllFormedSqlException("ill-formed sql [" + sql + "], idx=" + fromIdx);
         }
 
         int fromIdxEnd = SqlParserUtil.findRelative(sql, fromIdx, SqlKeyword.FROM.getValue(), SqlKeyword.WHERE.getValue(), SqlKeyword.GROUP_BY.getValue(),
-                                            SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlSyntaxConstant.SQL_TERMINAL);
+                                            SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
         if(fromIdxEnd == -1) throw new IllFormedSqlException("no table list [" + sql + "], idx=" + fromIdx);
 
         String table_list = sql.substring(fromIdx + SqlKeyword.FROM.getValue().length(), fromIdxEnd);
         parserContext.setIdx(fromIdxEnd);
         TableList tableList = new TableList(table_list);
 
-        return new SelectNode(SqlKeyword.FROM, table_list, tableList);
+        SelectNode selectNode =  new SelectNode(SqlKeyword.FROM, table_list, tableList);
+        parserContext.add(selectNode);
+        return true;
     }
 
-    private SelectNode parseSlt(ParserContext parserContext) {
+    private boolean parseSlt(ParserContext parserContext) {
         //SELECT_LIST
         String sql = parserContext.getSql();
 
@@ -197,14 +191,17 @@ public class SelectParser {
         if(selectIdx == -1) throw new IllFormedSqlException("no select [" + sql + "], idx=" + selectIdx);
 
         int selectIdxEnd = SqlParserUtil.findRelative(sql, selectIdx, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlKeyword.ORDER_BY.getValue(),
-                                                                      SqlKeyword.LIMIT.getValue(), SqlSyntaxConstant.SQL_TERMINAL);
+                                                                      SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
         if(selectIdxEnd == -1) throw new IllFormedSqlException("no select list [" + sql + "], idx=" + selectIdx);
 
         String select_list = sql.substring(selectIdx + SqlKeyword.SELECT.getValue().length(), selectIdxEnd);
         parserContext.setIdx(selectIdxEnd);
         SelectList slt = new SelectList(select_list);
 
-        return new SelectNode(SqlKeyword.SELECT, select_list, slt);
+        SelectNode selectNode = new SelectNode(SqlKeyword.SELECT, select_list, slt);
+        parserContext.setDistinct(slt.distinct);
+        parserContext.add(selectNode);
+        return true;
     }
 
     @Override
@@ -213,57 +210,51 @@ public class SelectParser {
     }
 
     static class SelectSyntax {
-        List<SelectNode> nodes;
+        private final List<SelectNode> nodes;
+        private final boolean distinct;
+        private final boolean existsLimit;
 
-        public SelectSyntax(List<SelectNode> nodes) {
+        public SelectSyntax(List<SelectNode> nodes, boolean distinct, boolean existsLimit) {
             this.nodes = nodes;
+            this.distinct = distinct;
+            this.existsLimit = existsLimit;
         }
 
         public String countSql() {
-            boolean distinct = false;
             StringBuilder sb = new StringBuilder();
-
             for(SelectNode node : nodes) {
-                if(node.keyword == SqlKeyword.SELECT) {
-                    distinct = ((SelectList) node.nodeValue).distinct;
-                }
-
-                sb.append(node.countSql(distinct)).append(SqlSyntaxConstant.LF);
+                sb.append(node.countSql(distinct, existsLimit)).append(SqlConstant.LF);
             }
 
-            return distinct ? SqlKeyword.SELECT.getValue()
-                               + SqlSyntaxConstant.SPACE + SqlSyntaxConstant.COUNT_SQ
-                               + SqlSyntaxConstant.SPACE + SqlKeyword.FROM.getValue()
-                               + SqlSyntaxConstant.SPACE + SqlSyntaxConstant.LEFT_PARENTHESES
-                               + SqlSyntaxConstant.LF + sb.toString()
-                               + SqlSyntaxConstant.LF + SqlSyntaxConstant.RIGHT_PARENTHESES
-                               + SqlSyntaxConstant.SPACE + "__alias__count__" + SqlSyntaxConstant.SQL_TERMINAL
+            return distinct || existsLimit ? SqlKeyword.SELECT.getValue()
+                               + SqlConstant.SPACE + SqlConstant.COUNT_SQ
+                               + SqlConstant.SPACE + SqlKeyword.FROM.getValue()
+                               + SqlConstant.SPACE + SqlConstant.LEFT_PARENTHESES
+                               + SqlConstant.LF + sb.toString()
+                               + SqlConstant.LF + SqlConstant.RIGHT_PARENTHESES
+                               + SqlConstant.SPACE + "__alias__count__" + SqlConstant.SQL_TERMINAL
                    : sb.toString();
         }
 
         public String pageSql() {
-            boolean existsLimit = false;
-            int last = nodes.size() - 1;
             StringBuilder sb = new StringBuilder();
 
-            for(int i = 0; i < nodes.size(); i++) {
-                SelectNode node = nodes.get(i);
-
-                if(i == last) continue;
-
-                if(node.keyword == SqlKeyword.LIMIT) {
-                    existsLimit = true;
+            for(SelectNode node : nodes) {
+                if(node.keyword == SqlKeyword.TERMINAL) {
+                    break;
                 }
-                sb.append(node).append(SqlSyntaxConstant.LF);
+                sb.append(node).append(SqlConstant.LF);
             }
+
             return existsLimit ? SqlKeyword.SELECT.getValue()
-                                  + SqlSyntaxConstant.SPACE + SqlSyntaxConstant.ALL_COLUMN
-                                  + SqlSyntaxConstant.SPACE + SqlKeyword.FROM.getValue()
-                                  + SqlSyntaxConstant.SPACE + SqlSyntaxConstant.LEFT_PARENTHESES
-                                  + SqlSyntaxConstant.LF + sb.toString()
-                                  + SqlSyntaxConstant.LF + SqlSyntaxConstant.RIGHT_PARENTHESES
-                                  + SqlSyntaxConstant.SPACE + "__alias__page__" + SqlSyntaxConstant.SQL_TERMINAL
-                   : sb.toString() + SqlSyntaxConstant.LF + SqlSyntaxConstant.PAGE_SQ + SqlSyntaxConstant.LF + SqlSyntaxConstant.SQL_TERMINAL;
+                                  + SqlConstant.SPACE + SqlConstant.ALL_COLUMN
+                                  + SqlConstant.SPACE + SqlKeyword.FROM.getValue()
+                                  + SqlConstant.SPACE + SqlConstant.LEFT_PARENTHESES
+                                  + SqlConstant.LF + sb.toString()
+                                  + SqlConstant.LF + SqlConstant.RIGHT_PARENTHESES
+                                  + SqlConstant.SPACE + "__alias__page__"
+                                  + SqlConstant.LF + SqlConstant.MYSQL_PAGE_SQ + SqlConstant.LF + SqlConstant.SQL_TERMINAL
+                   : sb.toString() + SqlConstant.LF + SqlConstant.MYSQL_PAGE_SQ + SqlConstant.LF + SqlConstant.SQL_TERMINAL;
         }
 
         @Override
@@ -273,7 +264,7 @@ public class SelectParser {
             for(int i = 0; i < nodes.size(); i++) {
                 sb.append(nodes.get(i));
                 if(i != last) {
-                    sb.append(SqlSyntaxConstant.LF);
+                    sb.append(SqlConstant.LF);
                 }
             }
             return sb.toString();
@@ -281,7 +272,7 @@ public class SelectParser {
     }
 
     static class SelectNode {
-        static final String SEP = SqlSyntaxConstant.SPACE;
+        static final String SEP = SqlConstant.SPACE;
         SqlKeyword keyword;
         String nodeValueStr;
         NodeValue nodeValue;
@@ -292,21 +283,26 @@ public class SelectParser {
             this.nodeValue = nodeValue;
         }
 
-        public String countSql(boolean distinct) {
+        public String countSql(boolean distinct, boolean existsLimit) {
             switch(keyword) {
                 case SELECT:
-                    return distinct ? keyword.getValue() + SqlSyntaxConstant.SPACE + StringUtils.trim(nodeValueStr)
-                            : keyword.getValue() + SqlSyntaxConstant.SPACE + SqlSyntaxConstant.COUNT_SQ;
+                    if(distinct) {
+                        return toString();
+                    } else if(existsLimit) {
+                        return keyword.getValue() + SqlConstant.SPACE + SqlConstant.COUNT_SQ_INNER;
+                    } else {
+                        return keyword.getValue() + SqlConstant.SPACE + SqlConstant.COUNT_SQ;
+                    }
                 case FROM:
                 case WHERE:
                 case GROUP_BY:
                 case HAVING:
                 case LIMIT:
-                    return keyword.getValue() + SqlSyntaxConstant.SPACE + StringUtils.trim(nodeValueStr);
+                    return toString();
                 case ORDER_BY:
                     return "";
                 case TERMINAL:
-                    return distinct ? "" : StringUtils.trim(nodeValueStr);
+                    return distinct || existsLimit ? "" : StringUtils.trim(nodeValueStr);
             }
             throw new IllFormedSqlException("unexpected sql keyword [" + keyword.getValue() + "]");
         }
@@ -327,7 +323,7 @@ public class SelectParser {
         String pageSize;
 
         public LimitCondition(String limit_condition) {
-            int idx = limit_condition.indexOf(SqlSyntaxConstant.COMMA);
+            int idx = limit_condition.indexOf(SqlConstant.COMMA);
             if(idx == -1) {
                 current = "";
                 pageSize = StringUtils.trim(limit_condition);
@@ -339,13 +335,13 @@ public class SelectParser {
 
         @Override
         public String toString() {
-            return current + SqlSyntaxConstant.COMMA + SqlSyntaxConstant.SPACE + pageSize;
+            return current + SqlConstant.COMMA + SqlConstant.SPACE + pageSize;
         }
     }
 
     static class TableList extends NodeValue {
-        static final String[] PREFIX = {SqlSyntaxConstant.FULL_JOIN_PREFIX, SqlSyntaxConstant.CROSS_JOIN_PREFIX,
-                SqlSyntaxConstant.INNER_JOIN_PREFIX, SqlSyntaxConstant.LEFT_JOIN_PREFIX, SqlSyntaxConstant.RIGHT_JOIN_PREFIX};
+        static final String[] PREFIX = {SqlConstant.FULL_JOIN_PREFIX, SqlConstant.CROSS_JOIN_PREFIX,
+                SqlConstant.INNER_JOIN_PREFIX, SqlConstant.LEFT_JOIN_PREFIX, SqlConstant.RIGHT_JOIN_PREFIX};
 
         static final String JOIN = SqlKeyword.JOIN.getValue();
 
@@ -394,9 +390,9 @@ public class SelectParser {
 
             char c;
             if(idx > 0 && ((c = str.charAt(idx-1)) == '_')) {
-                int sidx = StringUtils.lastIndexOfIgnoreCase(str, SqlSyntaxConstant.STRAIGHT_JOIN_PREFIX, idx-1);
+                int sidx = StringUtils.lastIndexOfIgnoreCase(str, SqlConstant.STRAIGHT_JOIN_PREFIX, idx-1);
 
-                if(sidx > -1 && (sidx + SqlSyntaxConstant.STRAIGHT_JOIN_PREFIX.length()) == idx - 1 && SqlParserUtil.keywordLeftBound(str, sidx)) {
+                if(sidx > -1 && (sidx + SqlConstant.STRAIGHT_JOIN_PREFIX.length()) == idx - 1 && SqlParserUtil.keywordLeftBound(str, sidx)) {
                     return sidx;
                 } else {
                     return -1;
@@ -428,8 +424,8 @@ public class SelectParser {
 
             char c;
             if(idx > 0 && ((c = str.charAt(idx-1)) == '_')) {
-                int sidx = StringUtils.lastIndexOfIgnoreCase(str, SqlSyntaxConstant.STRAIGHT_JOIN_PREFIX, idx-1);
-                return sidx > -1 && (sidx + SqlSyntaxConstant.STRAIGHT_JOIN_PREFIX.length()) == idx - 1 && SqlParserUtil.keywordLeftBound(str, sidx);
+                int sidx = StringUtils.lastIndexOfIgnoreCase(str, SqlConstant.STRAIGHT_JOIN_PREFIX, idx-1);
+                return sidx > -1 && (sidx + SqlConstant.STRAIGHT_JOIN_PREFIX.length()) == idx - 1 && SqlParserUtil.keywordLeftBound(str, sidx);
 
             } else if(idx > 0 && ((c = str.charAt(idx-1)) == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f')) {
                 int iidx = idx-1;
@@ -458,7 +454,7 @@ public class SelectParser {
             for(int i = 0; i < tables.size(); i++) {
                 sb.append(tables.get(i));
                 if(i != last) {
-                    sb.append(SqlSyntaxConstant.SPACE);
+                    sb.append(SqlConstant.LF).append(SqlConstant.SPACE);
                 }
             }
             return sb.toString();
@@ -469,7 +465,7 @@ public class SelectParser {
         String originalTable;
 
         public TableElement(String originalTable, String joinType) {
-            this.originalTable = joinType + SqlSyntaxConstant.SPACE + originalTable;
+            this.originalTable = joinType + SqlConstant.SPACE + originalTable;
         }
 
         @Override
@@ -501,7 +497,7 @@ public class SelectParser {
         }
 
         private static int nextComma(String str, int from, int prevIdx) {
-            int idx = str.indexOf(SqlSyntaxConstant.COMMA, from);
+            int idx = str.indexOf(SqlConstant.COMMA, from);
             if(idx == -1) return -1;
 
             if(SqlParserUtil.isCharLiteral(str, prevIdx, idx)) {
@@ -527,7 +523,7 @@ public class SelectParser {
             for(int i = 0; i < columns.size(); i++) {
                 sb.append(columns.get(i));
                 if(i != last) {
-                    sb.append(SqlSyntaxConstant.COMMA + SqlSyntaxConstant.SPACE);
+                    sb.append(SqlConstant.COMMA + SqlConstant.SPACE);
                 }
             }
             return sb.toString();
@@ -553,7 +549,8 @@ public class SelectParser {
 
     public static void main(String[] argv) {
         //@link SqlSyntax:
-        String sql = "select ct . `id` `i'd\",\"d'd`, 1 as '2\"(,1', 'select' as `from`, 12.34 n_q, \n" +
+        String sql = "\n" +
+                "select ct . `id` `i'd\",\"d'd`, (1) as '2\"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp, \n" +
                 "        `CONCAT` (CONCAT('-\"(,\"-', ')', ','), ct. `name`, \"',\", 'sdf\"from\"') AS `low name`, \n" +
                 "        (select id from city where id in (1000101, 1000102) limit 1) as `temp`,\n" +
                 "\t\t\t\t(select 'select') as no_from\n" +
@@ -570,8 +567,8 @@ public class SelectParser {
                 "\n" +
                 "order by ct.id,  `ct`.`name` DESC\n" +
                 "\n" +
-                "limit 1, 222\n" +
-                ";";
+                //"limit 1, 222\n" +
+                ";\n";
 
         SelectParser selectParser = new SelectParser().parse(sql);
 

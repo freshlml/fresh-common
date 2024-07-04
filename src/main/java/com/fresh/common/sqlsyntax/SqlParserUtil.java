@@ -2,8 +2,6 @@ package com.fresh.common.sqlsyntax;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.StringTokenizer;
-
 public class SqlParserUtil {
 
     //去除 sql 前置后置空格，换行，制表符和多余的 () 对. 必要时追加 ";"
@@ -25,7 +23,7 @@ public class SqlParserUtil {
             if(c == ')') parentheses--;
         }
 
-        sql = sql.substring(pos, endPos+1) + SqlSyntaxConstant.SQL_TERMINAL;  //IndexOutOfBoundsException if pos == -1
+        sql = sql.substring(pos, endPos+1) + SqlConstant.SQL_TERMINAL;  //IndexOutOfBoundsException if pos == -1
 
         return sql;
     }
@@ -52,7 +50,7 @@ public class SqlParserUtil {
             int suffixIdx;
 
             while((suffixIdx = StringUtils.indexOfIgnoreCase(sql, suffix, pos)) != -1) {
-                if(SqlSyntaxConstant.SQL_TERMINAL.equals(suffix)) break;
+                if(SqlConstant.SQL_TERMINAL.equals(suffix)) break;
 
                 if(isCharLiteral(sql, prefixStart, suffixIdx) || !keywordBound(sql, suffix, suffixIdx)) {
                     pos = suffixIdx + suffix.length();
@@ -200,7 +198,7 @@ public class SqlParserUtil {
 
         System.out.println(findRelative("seLect seleCt frOm fRom (select * from table) ct;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue()));
 
-        System.out.println(findRelative("select 'select' as `from`, `from`, (select 'select') as no_from;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlSyntaxConstant.SQL_TERMINAL));
+        System.out.println(findRelative("select 'select' as `from`, `from`, (select 'select') as no_from;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlConstant.SQL_TERMINAL));
 
     }
 

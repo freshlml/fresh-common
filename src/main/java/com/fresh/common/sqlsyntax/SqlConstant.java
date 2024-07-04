@@ -1,6 +1,6 @@
 package com.fresh.common.sqlsyntax;
 
-public class SqlSyntaxConstant {
+public class SqlConstant {
     static final String LF = "\n";
     static final String CR = "\r";
     static final String SPACE = " ";
@@ -18,5 +18,6 @@ public class SqlSyntaxConstant {
     static final String LEFT_JOIN_PREFIX = "LEFT";
     static final String RIGHT_JOIN_PREFIX = "RIGHT";
     static final String COUNT_SQ = "COUNT(*)";
-    static final String PAGE_SQ = "LIMIT ?, ?";
+    static final String COUNT_SQ_INNER = "1";
+    static final String MYSQL_PAGE_SQ = "LIMIT ?, ?";
 }
