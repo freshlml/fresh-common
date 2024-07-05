@@ -9,6 +9,7 @@ public class ParserContext {
     private final List<SelectParser.SelectNode> nodes = new ArrayList<>();
     private boolean distinct = false;
     private boolean existsLimit = false;
+    private boolean existsGroupBy = false;
 
     public ParserContext(String sql, int idx) {
         this.sql = sql;
@@ -20,7 +21,7 @@ public class ParserContext {
     }
 
     public SelectParser.SelectSyntax ofSelectSyntax() {
-        return new SelectParser.SelectSyntax(this.nodes, distinct, existsLimit);
+        return new SelectParser.SelectSyntax(this.nodes, distinct, existsLimit, existsGroupBy);
     }
 
     public void setDistinct(boolean distinct) {
@@ -29,6 +30,10 @@ public class ParserContext {
 
     public void setExistsLimit(boolean existsLimit) {
         this.existsLimit = existsLimit;
+    }
+
+    public void setExistsGroupBy(boolean existsGroupBy) {
+        this.existsGroupBy = existsGroupBy;
     }
 
     public int getIdx() {

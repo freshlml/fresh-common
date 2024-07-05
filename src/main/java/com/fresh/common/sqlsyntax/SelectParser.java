@@ -1,6 +1,8 @@
 package com.fresh.common.sqlsyntax;
 
 
+import com.fresh.common.utils.sql.IllFormedSqlException;
+import com.fresh.common.utils.sql.SqlUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -11,7 +13,8 @@ public class SelectParser {
     private SelectSyntax selectSyntax;
 
     public SelectParser parse(String sql) {
-        sql = SqlParserUtil.redundant(sql, SqlKeyword.SELECT.getValue());
+        //sql = SqlParserUtil.redundant(sql, SqlKeyword.SELECT.getValue());
+        sql = SqlUtils.truncate(sql);
         ParserContext parserContext = new ParserContext(sql, 0);
 
         parseSlt(parserContext);
@@ -136,6 +139,7 @@ public class SelectParser {
         parserContext.setIdx(groupByIdxEnd);
 
         SelectNode selectNode =  new SelectNode(SqlKeyword.GROUP_BY, group_by_list, null);
+        parserContext.setExistsGroupBy(true);
         parserContext.add(selectNode);
         return true;
     }
@@ -213,20 +217,22 @@ public class SelectParser {
         private final List<SelectNode> nodes;
         private final boolean distinct;
         private final boolean existsLimit;
+        private final boolean existsGroupBy;
 
-        public SelectSyntax(List<SelectNode> nodes, boolean distinct, boolean existsLimit) {
+        public SelectSyntax(List<SelectNode> nodes, boolean distinct, boolean existsLimit, boolean existsGroupBy) {
             this.nodes = nodes;
             this.distinct = distinct;
             this.existsLimit = existsLimit;
+            this.existsGroupBy = existsGroupBy;
         }
 
         public String countSql() {
             StringBuilder sb = new StringBuilder();
             for(SelectNode node : nodes) {
-                sb.append(node.countSql(distinct, existsLimit)).append(SqlConstant.LF);
+                sb.append(node.countSql(distinct, existsLimit, existsGroupBy)).append(SqlConstant.LF);
             }
 
-            return distinct || existsLimit ? SqlKeyword.SELECT.getValue()
+            return distinct || existsLimit || existsGroupBy ? SqlKeyword.SELECT.getValue()
                                + SqlConstant.SPACE + SqlConstant.COUNT_SQ
                                + SqlConstant.SPACE + SqlKeyword.FROM.getValue()
                                + SqlConstant.SPACE + SqlConstant.LEFT_PARENTHESES
@@ -283,12 +289,12 @@ public class SelectParser {
             this.nodeValue = nodeValue;
         }
 
-        public String countSql(boolean distinct, boolean existsLimit) {
+        public String countSql(boolean distinct, boolean existsLimit, boolean existsGroupBy) {
             switch(keyword) {
                 case SELECT:
                     if(distinct) {
                         return toString();
-                    } else if(existsLimit) {
+                    } else if(existsLimit || existsGroupBy) {
                         return keyword.getValue() + SqlConstant.SPACE + SqlConstant.COUNT_SQ_INNER;
                     } else {
                         return keyword.getValue() + SqlConstant.SPACE + SqlConstant.COUNT_SQ;
@@ -302,7 +308,7 @@ public class SelectParser {
                 case ORDER_BY:
                     return "";
                 case TERMINAL:
-                    return distinct || existsLimit ? "" : StringUtils.trim(nodeValueStr);
+                    return distinct || existsLimit || existsGroupBy ? "" : StringUtils.trim(nodeValueStr);
             }
             throw new IllFormedSqlException("unexpected sql keyword [" + keyword.getValue() + "]");
         }

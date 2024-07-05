@@ -1,10 +1,12 @@
 package com.fresh.common.sqlsyntax;
 
+import com.fresh.common.utils.sql.IllFormedSqlException;
 import org.apache.commons.lang3.StringUtils;
 
 public class SqlParserUtil {
 
     //去除 sql 前置后置空格，换行，制表符和多余的 () 对. 必要时追加 ";"
+    @Deprecated  //replace with SqlUtils#truncate(String, boolean, boolean)
     public static String redundant(String sql, String key) {
         int pos = StringUtils.indexOfIgnoreCase(sql, key);
         int parentheses = 0;
@@ -190,12 +192,7 @@ public class SqlParserUtil {
     }
 
 
-
-
-
     public static void main(String[] argv) {
-        System.out.println(redundant("  (\t (\n\r\n\f sElEct * from table ) ) \r\n ;", SqlKeyword.SELECT.getValue()));
-
         System.out.println(findRelative("seLect seleCt frOm fRom (select * from table) ct;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue()));
 
         System.out.println(findRelative("select 'select' as `from`, `from`, (select 'select') as no_from;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlConstant.SQL_TERMINAL));
