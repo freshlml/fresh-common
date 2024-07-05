@@ -554,15 +554,36 @@ public class SelectParser {
     }
 
     public static void main(String[] argv) {
-        //@link SqlSyntax:
+        /*
+
+select DISTINCT ct . `id` `i'd","d'd`, (1) as '2"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp,
+        `CONCAT` (CONCAT('-"(,"-', ')', ','), ct. `name`, "',", 'sdf"from"') AS `low name`,
+        (select id from city where id in (1000101, 1000102) limit 1) as `temp`,
+				(select 'select') as no_from
+
+from `shape` . `city` as `ct` left join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')
+														  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1
+															cross      join (select nct1.id from course nct1 join course nct2) as jjj
+
+where CONCAT(ct.`name`, `ct`.id) in ('鼠标市1000101')
+
+group by 123.4567, 7 DESC, '123', ct.id=123, (select `name` from city where 1=1 limit 1)
+
+having ct.id=123
+
+order by ct.id,  `ct`.`name` DESC
+
+limit 1, 222
+;
+         */
         String sql = "\n" +
-                "select ct . `id` `i'd\",\"d'd`, (1) as '2\"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp, \n" +
-                "        `CONCAT` (CONCAT('-\"(,\"-', ')', ','), ct. `name`, \"',\", 'sdf\"from\"') AS `low name`, \n" +
+                "select DISTINCT ct . `id` `i'd\",\"d'd`, (1) as '2\"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp,\n" +
+                "        `CONCAT` (CONCAT('-\"(,\"-', ')', ','), ct. `name`, \"',\", 'sdf\"from\"') AS `low name`,\n" +
                 "        (select id from city where id in (1000101, 1000102) limit 1) as `temp`,\n" +
                 "\t\t\t\t(select 'select') as no_from\n" +
-                "\t\t\t\t\n" +
+                "\n" +
                 "from `shape` . `city` as `ct` left join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')\n" +
-                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1  \n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1\n" +
                 "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tcross      join (select nct1.id from course nct1 join course nct2) as jjj\n" +
                 "\n" +
                 "where CONCAT(ct.`name`, `ct`.id) in ('鼠标市1000101')\n" +
@@ -573,8 +594,8 @@ public class SelectParser {
                 "\n" +
                 "order by ct.id,  `ct`.`name` DESC\n" +
                 "\n" +
-                //"limit 1, 222\n" +
-                ";\n";
+                "limit 1, 222\n" +
+                ";";
 
         SelectParser selectParser = new SelectParser().parse(sql);
 
