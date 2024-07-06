@@ -414,9 +414,9 @@ public class SelectParser {
                 } else {
                     return -1;
                 }
-            } else if(idx > 0 && ((c = str.charAt(idx-1)) == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f')) {
+            } else if(idx > 0 && (SqlUtils.ASCII_whitespace(str.charAt(idx - 1)))) {
                 int iidx = idx-1;
-                while(iidx >= 0 && ((c = str.charAt(iidx)) == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f')) {
+                while(iidx >= 0 && (SqlUtils.ASCII_whitespace(str.charAt(iidx)))) {
                     iidx--;
                 }
                 if(iidx >= 0) {
