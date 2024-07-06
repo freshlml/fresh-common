@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SelectParser {
-
+    //SelectSyntaxSample defined in SqlSyntax_sample.md
     private SelectSyntax selectSyntax;
 
     public SelectParser parse(String sql) {
@@ -199,10 +199,10 @@ public class SelectParser {
         if(selectIdxEnd == -1) throw new IllFormedSqlException("no select list [" + sql + "], idx=" + selectIdx);
 
         String select_list = sql.substring(selectIdx + SqlKeyword.SELECT.getValue().length(), selectIdxEnd);
-        parserContext.setIdx(selectIdxEnd);
         SelectList slt = new SelectList(select_list);
-
         SelectNode selectNode = new SelectNode(SqlKeyword.SELECT, select_list, slt);
+
+        parserContext.setIdx(selectIdxEnd);
         parserContext.setDistinct(slt.distinct);
         parserContext.add(selectNode);
         return true;
@@ -320,8 +320,16 @@ public class SelectParser {
     }
 
     abstract static class NodeValue {
+        String nodeValue;
+
+        public NodeValue(String nodeValue) {
+            this.nodeValue = nodeValue;
+        }
+
         @Override
-        public abstract String toString();
+        public String toString() {
+            return nodeValue;
+        }
     }
 
     static class LimitCondition extends NodeValue {
@@ -329,6 +337,7 @@ public class SelectParser {
         String pageSize;
 
         public LimitCondition(String limit_condition) {
+            super(limit_condition);
             int idx = limit_condition.indexOf(SqlConstant.COMMA);
             if(idx == -1) {
                 current = "";
@@ -341,34 +350,36 @@ public class SelectParser {
 
         @Override
         public String toString() {
-            return current + SqlConstant.COMMA + SqlConstant.SPACE + pageSize;
+            return StringUtils.isEmpty(current) ? pageSize : current + SqlConstant.COMMA + SqlConstant.SPACE + pageSize;
         }
     }
 
     static class TableList extends NodeValue {
         static final String[] PREFIX = {SqlConstant.FULL_JOIN_PREFIX, SqlConstant.CROSS_JOIN_PREFIX,
-                SqlConstant.INNER_JOIN_PREFIX, SqlConstant.LEFT_JOIN_PREFIX, SqlConstant.RIGHT_JOIN_PREFIX};
+                SqlConstant.INNER_JOIN_PREFIX, SqlConstant.LEFT_JOIN_PREFIX, SqlConstant.RIGHT_JOIN_PREFIX,
+                SqlConstant.LEFT_OUTER_JOIN_PREFIX, SqlConstant.RIGHT_OUTER_JOIN_PREFIX};
 
         static final String JOIN = SqlKeyword.JOIN.getValue();
 
-        final List<TableElement> tables = new ArrayList<>();
+        final List<TableElement> tableElements = new ArrayList<>();
 
         public TableList(String nodeValueStr) {
+            super(nodeValueStr);
             int idx = 0;
             int nc;
             String joinRl = "";
             while((nc = nextTable(nodeValueStr, idx, idx)) != -1) {
                 int ji = joinType(nodeValueStr, nc);
-                String originalTable = StringUtils.trim(nodeValueStr.substring(idx, ji));
-                TableElement tableElement = new TableElement(originalTable, joinRl);
-                tables.add(tableElement);
+                String tableTailingStr = StringUtils.trim(nodeValueStr.substring(idx, ji));
+                TableElement tableElement = new TableElement(tableTailingStr, joinRl);
+                tableElements.add(tableElement);
                 idx = nc + JOIN.length();
                 joinRl = StringUtils.trim(nodeValueStr.substring(ji, idx));
             }
             if(idx < nodeValueStr.length()) { //idx ~ end
-                String originalTable = StringUtils.trim(nodeValueStr.substring(idx));
-                TableElement tableElement = new TableElement(originalTable, joinRl);
-                tables.add(tableElement);
+                String tableTailingStr = StringUtils.trim(nodeValueStr.substring(idx));
+                TableElement tableElement = new TableElement(tableTailingStr, joinRl);
+                tableElements.add(tableElement);
             }
         }
 
@@ -456,9 +467,9 @@ public class SelectParser {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
-            int last = tables.size() - 1;
-            for(int i = 0; i < tables.size(); i++) {
-                sb.append(tables.get(i));
+            int last = tableElements.size() - 1;
+            for(int i = 0; i < tableElements.size(); i++) {
+                sb.append(tableElements.get(i));
                 if(i != last) {
                     sb.append(SqlConstant.LF).append(SqlConstant.SPACE);
                 }
@@ -468,37 +479,45 @@ public class SelectParser {
     }
 
     static class TableElement {
-        String originalTable;
+        String tableElementStr;
+        String joinType = "";
+        String tableName;
+        SelectSyntax subQuery;
+        String as = "";
+        String tableAlias;
+        Expression onCondition;
 
-        public TableElement(String originalTable, String joinType) {
-            this.originalTable = joinType + SqlConstant.SPACE + originalTable;
+        public TableElement(String tableTailingStr, String joinType) {
+            this.joinType = joinType;
+            this.tableElementStr = joinType + SqlConstant.SPACE + tableTailingStr;
         }
 
         @Override
         public String toString() {
-            return originalTable;
+            return tableElementStr;
         }
     }
 
     static class SelectList extends NodeValue {
-        final List<ColumnElement> columns = new ArrayList<>();
+        final List<Column> columns = new ArrayList<>();
         final boolean distinct;
 
         public SelectList(String nodeValueStr) {
+            super(nodeValueStr);
             this.distinct = StringUtils.startsWithIgnoreCase(nodeValueStr.trim(), SqlKeyword.DISTINCT.getValue());
 
             int idx = 0;
             int nc;
             while((nc = nextComma(nodeValueStr, idx, idx)) != -1) {
-                String originalColumn = StringUtils.trim(nodeValueStr.substring(idx, nc));
-                ColumnElement columnElement = new ColumnElement(originalColumn);
-                columns.add(columnElement);
+                String columnStr = StringUtils.trim(nodeValueStr.substring(idx, nc));
+                Column column = new Column(columnStr);
+                columns.add(column);
                 idx = nc + 1;
             }
             if(idx < nodeValueStr.length()) { //idx ~ end
-                String originalColumn = StringUtils.trim(nodeValueStr.substring(idx));
-                ColumnElement columnElement = new ColumnElement(originalColumn);
-                columns.add(columnElement);
+                String columnStr = StringUtils.trim(nodeValueStr.substring(idx));
+                Column column = new Column(columnStr);
+                columns.add(column);
             }
         }
 
@@ -535,22 +554,24 @@ public class SelectParser {
             return sb.toString();
         }
     }
-    static class ColumnElement {
-        String originalColumn;
-        String columnName;
-        ColumnType columnType;
-        boolean as;
+    static class Column {
+        String columnStr;
+        Expression expression;
+        String as = "";
         String columnAlias;
-        SelectSyntax subQuery;
 
-        public ColumnElement(String originalColumn) {
-            this.originalColumn = originalColumn;
+        public Column(String columnStr) {
+            this.columnStr = columnStr;
         }
 
         @Override
         public String toString() {
-            return originalColumn;
+            return columnStr;
         }
+    }
+
+    static class Expression {
+
     }
 
     public static void main(String[] argv) {
@@ -559,7 +580,8 @@ public class SelectParser {
 select DISTINCT ct . `id` `i'd","d'd`, (1) as '2"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp,
         `CONCAT` (CONCAT('-"(,"-', ')', ','), ct. `name`, "',", 'sdf"from"') AS `low name`,
         (select id from city where id in (1000101, 1000102) limit 1) as `temp`,
-				(select 'select') as no_from
+				(select 'select') as no_from,
+				(1+232) + (1<2) * (1 AND 1) al_op
 
 from `shape` . `city` as `ct` left join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')
 														  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1
@@ -575,15 +597,17 @@ order by ct.id,  `ct`.`name` DESC
 
 limit 1, 222
 ;
+
          */
         String sql = "\n" +
-                "select DISTINCT ct . `id` `i'd\",\"d'd`, (1) as '2\"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp,\n" +
-                "        `CONCAT` (CONCAT('-\"(,\"-', ')', ','), ct. `name`, \"',\", 'sdf\"from\"') AS `low name`,\n" +
+                "select DISTINCT ct . `id` `i'd\",\"d'd`, (1) as '2\"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp, \n" +
+                "        `CONCAT` (CONCAT('-\"(,\"-', ')', ','), ct. `name`, \"',\", 'sdf\"from\"') AS `low name`, \n" +
                 "        (select id from city where id in (1000101, 1000102) limit 1) as `temp`,\n" +
-                "\t\t\t\t(select 'select') as no_from\n" +
-                "\n" +
+                "\t\t\t\t(select 'select') as no_from,\n" +
+                "\t\t\t\t(1+232) + (1<2) * (1 AND 1) al_op \n" +
+                "\t\t\t\t\n" +
                 "from `shape` . `city` as `ct` left join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')\n" +
-                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1\n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1  \n" +
                 "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tcross      join (select nct1.id from course nct1 join course nct2) as jjj\n" +
                 "\n" +
                 "where CONCAT(ct.`name`, `ct`.id) in ('鼠标市1000101')\n" +
@@ -595,7 +619,7 @@ limit 1, 222
                 "order by ct.id,  `ct`.`name` DESC\n" +
                 "\n" +
                 "limit 1, 222\n" +
-                ";";
+                ";\n";
 
         SelectParser selectParser = new SelectParser().parse(sql);
 
