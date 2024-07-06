@@ -33,7 +33,7 @@ public class SqlParserUtil {
 
     static boolean keywordLeftBound(String str, int idx) {
         char c;
-        return (idx<=0 || ((c = str.charAt(idx-1)) == '\'' || c == '\"' || c == '`' || c == ')' || c == '*' ||
+        return (idx<=0 || ((c = str.charAt(idx - 1)) == '\'' || c == '\"' || c == '`' || c == ')' || c == '*' ||
                 SqlUtils.ASCII_whitespace(c)));
     }
 

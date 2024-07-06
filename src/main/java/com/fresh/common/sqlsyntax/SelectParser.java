@@ -356,8 +356,7 @@ public class SelectParser {
 
     static class TableList extends NodeValue {
         static final String[] PREFIX = {SqlConstant.FULL_JOIN_PREFIX, SqlConstant.CROSS_JOIN_PREFIX,
-                SqlConstant.INNER_JOIN_PREFIX, SqlConstant.LEFT_JOIN_PREFIX, SqlConstant.RIGHT_JOIN_PREFIX,
-                SqlConstant.LEFT_OUTER_JOIN_PREFIX, SqlConstant.RIGHT_OUTER_JOIN_PREFIX};
+                SqlConstant.INNER_JOIN_PREFIX, SqlConstant.LEFT_JOIN_PREFIX, SqlConstant.RIGHT_JOIN_PREFIX, SqlConstant.OUTER_JOIN_PREFIX};
 
         static final String JOIN = SqlKeyword.JOIN.getValue();
 
@@ -415,7 +414,7 @@ public class SelectParser {
                     return -1;
                 }
             } else if(idx > 0 && (SqlUtils.ASCII_whitespace(str.charAt(idx - 1)))) {
-                int iidx = idx-1;
+                int iidx = idx - 1;
                 while(iidx >= 0 && (SqlUtils.ASCII_whitespace(str.charAt(iidx)))) {
                     iidx--;
                 }
@@ -424,7 +423,33 @@ public class SelectParser {
                         int sidx = StringUtils.lastIndexOfIgnoreCase(str, prefix, iidx);
 
                         if (sidx > -1 && (sidx + prefix.length()) == (iidx + 1) && SqlParserUtil.keywordLeftBound(str, sidx)) {
-                            return sidx;
+                            if(!prefix.equals(SqlConstant.OUTER_JOIN_PREFIX)) return sidx;
+                            else {
+                                //only LEFT OR RIGHT
+                                if(sidx > 0 && (SqlUtils.ASCII_whitespace(str.charAt(sidx - 1)))) {
+                                    int tsidx = sidx-1;
+                                    while(tsidx >= 0 && (SqlUtils.ASCII_whitespace(str.charAt(tsidx)))) {
+                                        tsidx--;
+                                    }
+                                    if(tsidx >= 0) {
+                                        int stsidx = StringUtils.lastIndexOfIgnoreCase(str, SqlConstant.LEFT_JOIN_PREFIX, tsidx);
+                                        if(stsidx > -1 && (stsidx + 4) == (tsidx + 1) && SqlParserUtil.keywordLeftBound(str, stsidx) ) {
+                                            return stsidx;
+                                        } else {
+                                            stsidx = StringUtils.lastIndexOfIgnoreCase(str, SqlConstant.RIGHT_JOIN_PREFIX, tsidx);
+                                            if(stsidx > -1 && (stsidx + 4) == (tsidx + 1) && SqlParserUtil.keywordLeftBound(str, stsidx) ) {
+                                                return stsidx;
+                                            } else {
+                                                return -1;
+                                            }
+                                        }
+                                    } else {
+                                        return -1;
+                                    }
+                                } else {
+                                    return -1;
+                                }
+                            }
                         }
                     }
                 }
@@ -606,7 +631,7 @@ limit 1, 222
                 "\t\t\t\t(select 'select') as no_from,\n" +
                 "\t\t\t\t(1+232) + (1<2) * (1 AND 1) al_op \n" +
                 "\t\t\t\t\n" +
-                "from `shape` . `city` as `ct` left join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')\n" +
+                "from `shape` . `city` as `ct` left outer join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')\n" +
                 "\t\t\t\t\t\t\t\t\t\t\t\t\t\t  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1  \n" +
                 "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tcross      join (select nct1.id from course nct1 join course nct2) as jjj\n" +
                 "\n" +
