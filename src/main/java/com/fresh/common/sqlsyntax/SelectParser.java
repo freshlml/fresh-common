@@ -460,35 +460,6 @@ public class SelectParser {
             return SqlParserUtil.keywordLeftBound(str, idx) ? idx : -1;
         }
 
-        @Deprecated
-        private static boolean isJoinType(String str, int idx) {
-            if(!SqlParserUtil.keywordRightBound(str, JOIN, idx)) return false;
-
-            char c;
-            if(idx > 0 && ((c = str.charAt(idx-1)) == '_')) {
-                int sidx = StringUtils.lastIndexOfIgnoreCase(str, SqlConstant.STRAIGHT_JOIN_PREFIX, idx-1);
-                return sidx > -1 && (sidx + SqlConstant.STRAIGHT_JOIN_PREFIX.length()) == idx - 1 && SqlParserUtil.keywordLeftBound(str, sidx);
-
-            } else if(idx > 0 && ((c = str.charAt(idx-1)) == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f')) {
-                int iidx = idx-1;
-                while(iidx >= 0 && ((c = str.charAt(iidx)) == ' ' || c == '\n' || c == '\r' || c == '\t' || c == '\f')) {
-                    iidx--;
-                }
-                if(iidx >= 0) {
-                    for (String prefix : PREFIX) {
-                        int sidx = StringUtils.lastIndexOfIgnoreCase(str, prefix, iidx);
-                        if (sidx > -1 && (sidx + prefix.length()) == (iidx + 1)) {
-                            return SqlParserUtil.keywordLeftBound(str, sidx);
-                        }
-                    }
-                }
-
-                return true;
-            }
-
-            return SqlParserUtil.keywordLeftBound(str, idx);
-        }
-
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
