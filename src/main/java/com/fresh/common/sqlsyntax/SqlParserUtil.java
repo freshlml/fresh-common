@@ -32,12 +32,18 @@ public class SqlParserUtil {
     }
 
     static boolean keywordLeftBound(String str, int idx) {
+        /*
+        (idx <= 0 || !((c = str.charAt(idx - 1)) == '_' || Character.isLetter(c) || Character.isDigit(c)));
+         */
         char c;
         return (idx <= 0 || ((c = str.charAt(idx - 1)) == '\'' || c == '\"' || c == '`' || c == ')' || c == '*' ||
                 SqlUtils.ASCII_whitespace(c)));
     }
 
     static boolean keywordRightBound(String str, String keyword, int idx) {
+        /*
+        ((idx + keyword.length()) >= str.length() || !((c = str.charAt(idx + keyword.length())) == '_' || Character.isLetter(c) || Character.isDigit(c)));
+         */
         char c;
         return ((idx + keyword.length()) >= str.length() || ((c = str.charAt(idx + keyword.length())) == '\'' || c == '\"' || c == '`' || c == '(' ||
                 SqlUtils.ASCII_whitespace(c)));
