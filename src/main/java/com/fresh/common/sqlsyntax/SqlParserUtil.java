@@ -106,11 +106,27 @@ public class SqlParserUtil {
 
     public static boolean isCharLiteral(String str, int begin, int end) {
         char surroundChar = '\u0000';
+        boolean escape = false;
 
         for(int i = begin; i < end; i++) {
             char c = str.charAt(i);
 
-            if(surroundChar == '\'' && c == '\'') {
+            if(surroundChar == '\'' || surroundChar == '\"') {
+                if(c == surroundChar && !escape) {
+                    surroundChar = '\u0000';
+                    escape = false;
+                } else if(c == '\\') {
+                    escape = !escape;
+                } else {
+                    escape = false;
+                }
+            } else if(surroundChar == '`' && c == '`') {
+                surroundChar = '\u0000';
+            } else if (surroundChar == '\u0000' && (c == '\'' || c == '\"' || c == '`')) {
+                surroundChar = c;
+            }
+
+            /*if(surroundChar == '\'' && c == '\'') {
                 surroundChar = '\u0000';
             } else if(surroundChar == '\"' && c == '\"') {
                 surroundChar = '\u0000';
@@ -118,21 +134,6 @@ public class SqlParserUtil {
                 surroundChar = '\u0000';
             } else if (surroundChar == '\u0000' && (c == '\'' || c == '\"' || c == '`')) {
                 surroundChar = c;
-            }
-            /*if(surroundChar != '\u0000') {
-                if(surroundChar == '\'' && c == '\'') {
-                    surroundChar = '\u0000';
-                }
-                if(surroundChar == '\"' && c == '\"') {
-                    surroundChar = '\u0000';
-                }
-                if(surroundChar == '`' && c == '`') {
-                    surroundChar = '\u0000';
-                }
-            } else {
-                if (c == '\'' || c == '\"' || c == '`') {
-                    surroundChar = c;
-                }
             }*/
         }
         return surroundChar != '\u0000';
@@ -140,15 +141,21 @@ public class SqlParserUtil {
 
     public static boolean isNested(String str, int begin, int end) {
         char surroundChar = '\u0000';
+        boolean escape = false;
         int predict = 1;
 
         for(int i = end-1; i >= begin; i--) {
             char c = str.charAt(i);
 
-            if (surroundChar == '\'' && c == '\'') {
-                surroundChar = '\u0000';
-            } else if (surroundChar == '\"' && c == '\"') {
-                surroundChar = '\u0000';
+            if(surroundChar == '\'' || surroundChar == '\"') {
+                if(c == surroundChar && !escape) {
+                    surroundChar = '\u0000';
+                    escape = false;
+                } else if(c == '\\') {
+                    escape = !escape;
+                } else {
+                    escape = false;
+                }
             } else if(surroundChar == '`' && c == '`') {
                 surroundChar = '\u0000';
             } else if (surroundChar == '\u0000' && (c == '\'' || c == '\"' || c == '`')) {
@@ -170,15 +177,21 @@ public class SqlParserUtil {
 
     public static int findRelativeParentheses(String str, int begin) {
         char surroundChar = '\u0000';
+        boolean escape = false;
         int predict = 1;
 
         for(int i = begin; i < str.length(); i++) {
             char c = str.charAt(i);
 
-            if(surroundChar == '\'' && c == '\'') {
-                surroundChar = '\u0000';
-            } else if(surroundChar == '\"' && c == '\"') {
-                surroundChar = '\u0000';
+            if(surroundChar == '\'' || surroundChar == '\"') {
+                if(c == surroundChar && !escape) {
+                    surroundChar = '\u0000';
+                    escape = false;
+                } else if(c == '\\') {
+                    escape = !escape;
+                } else {
+                    escape = false;
+                }
             } else if(surroundChar == '`' && c == '`') {
                 surroundChar = '\u0000';
             } else if (surroundChar == '\u0000' && (c == '\'' || c == '\"' || c == '`')) {
