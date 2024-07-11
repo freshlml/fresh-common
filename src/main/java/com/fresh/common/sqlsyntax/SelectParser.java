@@ -14,7 +14,7 @@ public class SelectParser {
 
     public SelectParser parse(String sql) {
         //sql = SqlParserUtil.redundant(sql, SqlKeyword.SELECT.getValue());
-        sql = SqlUtils.truncate(sql, true, false);
+        sql = SqlUtils.truncate(sql);
         ParserContext parserContext = new ParserContext(sql, 0);
 
         parseSlt(parserContext);
