@@ -14,7 +14,7 @@ public class SelectParser {
 
     public SelectParser parse(String sql) {
         //sql = SqlParserUtil.redundant(sql, SqlKeyword.SELECT.getValue());
-        sql = SqlUtils.truncate(sql);
+        sql = SqlUtils.truncate(sql, true, false);
         ParserContext parserContext = new ParserContext(sql, 0);
 
         parseSlt(parserContext);
@@ -71,11 +71,11 @@ public class SelectParser {
         if(limitIdx == -1 && sql.charAt(parserContext.getIdx()) == SqlConstant.SQL_TERMINAL.charAt(0)) {
             return false;
         } else if(limitIdx == -1) {
-            throw new IllFormedSqlException("ill-formed sql [" + sql + "], idx=" + limitIdx);
+            throw new IllFormedSqlException("ill-formed sql [" + sql + "]");
         }
 
         int limitIdxEnd = SqlParserUtil.findRelative(sql, limitIdx, SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
-        if(limitIdxEnd == -1) throw new IllFormedSqlException("no limit condition [" + sql + "], idx=" + limitIdx);
+        if(limitIdxEnd == -1) throw new IllFormedSqlException("no limit condition [" + sql + "], near '" + sql.substring(limitIdx) + "'");
 
         String limit_condition = sql.substring(limitIdx + SqlKeyword.LIMIT.getValue().length(), limitIdxEnd);
         parserContext.setIdx(limitIdxEnd);
@@ -91,13 +91,16 @@ public class SelectParser {
         //ORDER_BY_LIST
         String sql = parserContext.getSql();
 
-        int orderByIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.ORDER_BY.getValue(), parserContext.getIdx());
+        int orderByIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.ORDER.getValue(), parserContext.getIdx());
         if(orderByIdx == -1) return false;
 
-        int orderByIdxEnd = SqlParserUtil.findRelative(sql, orderByIdx, SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
-        if(orderByIdxEnd == -1) throw new IllFormedSqlException("no order by list [" + sql + "], idx=" + orderByIdx);
+        int orderByIdxEnd = SqlParserUtil.findRelative(sql, orderByIdx, SqlKeyword.ORDER.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
+        if(orderByIdxEnd == -1) throw new IllFormedSqlException("no order by list [" + sql + "], near '" + sql.substring(orderByIdx) + "'");
 
-        String order_by_list = sql.substring(orderByIdx + SqlKeyword.ORDER_BY.getValue().length(), orderByIdxEnd);
+        int orderByLen = SqlParserUtil.findMatchedKey(sql, orderByIdx + SqlKeyword.ORDER.getValue().length() - 1, SqlKeyword.BY.getValue());
+        if(orderByLen == -1) throw new IllFormedSqlException("no matched 'by' for order [" + sql + "], near '" + sql.substring(orderByIdx) + "'");
+
+        String order_by_list = sql.substring(orderByLen, orderByIdxEnd);
         parserContext.setIdx(orderByIdxEnd);
 
         SelectNode selectNode =  new SelectNode(SqlKeyword.ORDER_BY, order_by_list, null);
@@ -112,9 +115,9 @@ public class SelectParser {
         int havingIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.HAVING.getValue(), parserContext.getIdx());
         if(havingIdx == -1) return false;
 
-        int havingIdxEnd = SqlParserUtil.findRelative(sql, havingIdx, SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(),
+        int havingIdxEnd = SqlParserUtil.findRelative(sql, havingIdx, SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER.getValue(),
                                                                       SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
-        if(havingIdxEnd == -1) throw new IllFormedSqlException("no having condition [" + sql + "], idx=" + havingIdx);
+        if(havingIdxEnd == -1) throw new IllFormedSqlException("no having condition [" + sql + "], near '" + sql.substring(havingIdx) + "'");
 
         String having_condition = sql.substring(havingIdx + SqlKeyword.HAVING.getValue().length(), havingIdxEnd);
         parserContext.setIdx(havingIdxEnd);
@@ -128,17 +131,20 @@ public class SelectParser {
         //GROUP_BY_LIST
         String sql = parserContext.getSql();
 
-        int groupByIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.GROUP_BY.getValue(), parserContext.getIdx());
+        int groupByIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.GROUP.getValue(), parserContext.getIdx());
         if(groupByIdx == -1) return false;
 
-        int groupByIdxEnd = SqlParserUtil.findRelative(sql, groupByIdx, SqlKeyword.GROUP_BY.getValue(), SqlKeyword.HAVING.getValue(),
-                                               SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
-        if(groupByIdxEnd == -1) throw new IllFormedSqlException("no group by list [" + sql + "], idx=" + groupByIdx);
+        int groupByIdxEnd = SqlParserUtil.findRelative(sql, groupByIdx, SqlKeyword.GROUP.getValue(), SqlKeyword.HAVING.getValue(),
+                                               SqlKeyword.ORDER.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
+        if(groupByIdxEnd == -1) throw new IllFormedSqlException("no group by list [" + sql + "], near '" + sql.substring(groupByIdx) + "'");
 
-        String group_by_list = sql.substring(groupByIdx + SqlKeyword.GROUP_BY.getValue().length(), groupByIdxEnd);
+        int groupByLen = SqlParserUtil.findMatchedKey(sql, groupByIdx + SqlKeyword.GROUP.getValue().length() - 1, SqlKeyword.BY.getValue());
+        if(groupByLen == -1) throw new IllFormedSqlException("no matched 'by' for group [" + sql + "], near '" + sql.substring(groupByIdx) + "'");
+
+        String group_by_list = sql.substring(groupByLen, groupByIdxEnd);
         parserContext.setIdx(groupByIdxEnd);
 
-        SelectNode selectNode =  new SelectNode(SqlKeyword.GROUP_BY, group_by_list, null);
+        SelectNode selectNode = new SelectNode(SqlKeyword.GROUP_BY, group_by_list, null);
         parserContext.setExistsGroupBy(true);
         parserContext.add(selectNode);
         return true;
@@ -151,9 +157,9 @@ public class SelectParser {
         int whereIdx = StringUtils.indexOfIgnoreCase(sql, SqlKeyword.WHERE.getValue(), parserContext.getIdx());
         if(whereIdx == -1) return false;
 
-        int whereIdxEnd = SqlParserUtil.findRelative(sql, whereIdx, SqlKeyword.WHERE.getValue(), SqlKeyword.GROUP_BY.getValue(),
-                                             SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
-        if(whereIdxEnd == -1) throw new IllFormedSqlException("no where condition [" + sql + "], idx=" + whereIdx);
+        int whereIdxEnd = SqlParserUtil.findRelative(sql, whereIdx, SqlKeyword.WHERE.getValue(), SqlKeyword.GROUP.getValue(),
+                                             SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
+        if(whereIdxEnd == -1) throw new IllFormedSqlException("no where condition [" + sql + "], near '" + sql.substring(whereIdx) + "'");
 
         String where_condition = sql.substring(whereIdx + SqlKeyword.WHERE.getValue().length(), whereIdxEnd);
         parserContext.setIdx(whereIdxEnd);
@@ -171,12 +177,12 @@ public class SelectParser {
         if(fromIdx == -1 && sql.charAt(parserContext.getIdx()) == SqlConstant.SQL_TERMINAL.charAt(0)) {
             return false;
         } else if(fromIdx == -1) {
-            throw new IllFormedSqlException("ill-formed sql [" + sql + "], idx=" + fromIdx);
+            throw new IllFormedSqlException("ill-formed sql [" + sql + "]");
         }
 
-        int fromIdxEnd = SqlParserUtil.findRelative(sql, fromIdx, SqlKeyword.FROM.getValue(), SqlKeyword.WHERE.getValue(), SqlKeyword.GROUP_BY.getValue(),
-                                            SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER_BY.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
-        if(fromIdxEnd == -1) throw new IllFormedSqlException("no table list [" + sql + "], idx=" + fromIdx);
+        int fromIdxEnd = SqlParserUtil.findRelative(sql, fromIdx, SqlKeyword.FROM.getValue(), SqlKeyword.WHERE.getValue(), SqlKeyword.GROUP.getValue(),
+                                            SqlKeyword.HAVING.getValue(), SqlKeyword.ORDER.getValue(), SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
+        if(fromIdxEnd == -1) throw new IllFormedSqlException("no table list [" + sql + "], near '" + sql.substring(fromIdx) + "'");
 
         String table_list = sql.substring(fromIdx + SqlKeyword.FROM.getValue().length(), fromIdxEnd);
         parserContext.setIdx(fromIdxEnd);
@@ -192,11 +198,11 @@ public class SelectParser {
         String sql = parserContext.getSql();
 
         int selectIdx = parserContext.getIdx();   //StringUtils.indexOfIgnoreCase(sql, SqlKeyword.SELECT.getValue(), parserContext.getIdx());
-        if(selectIdx == -1) throw new IllFormedSqlException("no select [" + sql + "], idx=" + selectIdx);
+        if(selectIdx == -1) throw new IllFormedSqlException("no select [" + sql + "]");
 
-        int selectIdxEnd = SqlParserUtil.findRelative(sql, selectIdx, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlKeyword.ORDER_BY.getValue(),
+        int selectIdxEnd = SqlParserUtil.findRelative(sql, selectIdx, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue(), SqlKeyword.ORDER.getValue(),
                                                                       SqlKeyword.LIMIT.getValue(), SqlConstant.SQL_TERMINAL);
-        if(selectIdxEnd == -1) throw new IllFormedSqlException("no select list [" + sql + "], idx=" + selectIdx);
+        if(selectIdxEnd == -1) throw new IllFormedSqlException("no select list [" + sql + "], near '" + sql.substring(selectIdx) + "'");
 
         String select_list = sql.substring(selectIdx + SqlKeyword.SELECT.getValue().length(), selectIdxEnd);
         SelectList slt = new SelectList(select_list);
@@ -573,49 +579,53 @@ public class SelectParser {
     public static void main(String[] argv) {
         /*
 
+
 select DISTINCT ct . `id` `i'd","d'd`, (1) as '2"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp,
         `CONCAT` (CONCAT('-"(,"-', ')', ','), ct. `name`, "',", 'sdf"from"') AS `low name`,
-        (select id from city where id in (1000101, 1000102) limit 1) as `temp`,
+        (select id '(\'*' from city where id in (1000101, 1000102) limit 1) as `temp`,
 				(select 'select') as no_from,
 				(1+232) + (1<2) * (1 AND 1) al_op
 
-from `shape` . `city` as `ct` left join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')
+from `shape` . `city` as `ct` left outer join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')
 														  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1
 															cross      join (select nct1.id from course nct1 join course nct2) as jjj
 
-where CONCAT(ct.`name`, `ct`.id) in ('鼠标市1000101')
+where'1'= '1' AND CONCAT(ct.`name`, `ct`.id) in ('鼠标市1000101')
 
-group by 123.4567, 7 DESC, '123', ct.id=123, (select `name` from city where 1=1 limit 1)
+group   by 123.4567, 7 DESC, '123', ct.id=123, (select `name` from city where 1=1 limit 1)
 
 having ct.id=123
 
-order by ct.id,  `ct`.`name` DESC
+order   by ct.id,  `ct`.`name` DESC
 
 limit 1, 222
 ;
 
+
          */
         String sql = "\n" +
-                "select DISTINCT ct . `id` `i'd\",\"d'd`, (1) as '2\"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp, \n" +
-                "        `CONCAT` (CONCAT('-\"(,\"-', ')', ','), ct. `name`, \"',\", 'sdf\"from\"') AS `low name`, \n" +
-                "        (select id from city where id in (1000101, 1000102) limit 1) as `temp`,\n" +
+                "\n" +
+                "select DISTINCT ct . `id` `i'd\",\"d'd`, (1) as '2\"(,1', 'select' as `from`, 12.34 n_q, (1 + 1 )  + 1 exp,\n" +
+                "        `CONCAT` (CONCAT('-\"(,\"-', ')', ','), ct. `name`, \"',\", 'sdf\"from\"') AS `low name`,\n" +
+                "        (select id '(\\'*' from city where id in (1000101, 1000102) limit 1) as `temp`,\n" +
                 "\t\t\t\t(select 'select') as no_from,\n" +
-                "\t\t\t\t(1+232) + (1<2) * (1 AND 1) al_op \n" +
-                "\t\t\t\t\n" +
+                "\t\t\t\t(1+232) + (1<2) * (1 AND 1) al_op\n" +
+                "\n" +
                 "from `shape` . `city` as `ct` left outer join ((select * from city as `123qwe_123`)) as aa_join on (ct.id in (((select id from city)))) and (ct.`name` LIKE '%市')\n" +
-                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1  \n" +
+                "\t\t\t\t\t\t\t\t\t\t\t\t\t\t  STRAIGHT_JOIN (select id as ',,,,join,,,,' from city) `inner join` on 1=1\n" +
                 "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tcross      join (select nct1.id from course nct1 join course nct2) as jjj\n" +
                 "\n" +
-                "where CONCAT(ct.`name`, `ct`.id) in ('鼠标市1000101')\n" +
+                "where'1'= '1' AND CONCAT(ct.`name`, `ct`.id) in ('鼠标市1000101')\n" +
                 "\n" +
-                "group by 123.4567, 7 DESC, '123', ct.id=123, (select `name` from city where 1=1 limit 1)\n" +
+                "group   by 123.4567, 7 DESC, '123', ct.id=123, (select `name` from city where 1=1 limit 1)\n" +
                 "\n" +
                 "having ct.id=123\n" +
                 "\n" +
-                "order by ct.id,  `ct`.`name` DESC\n" +
+                "order   by ct.id,  `ct`.`name` DESC\n" +
                 "\n" +
                 "limit 1, 222\n" +
-                ";\n";
+                ";\n" +
+                "\n";
 
         SelectParser selectParser = new SelectParser().parse(sql);
 

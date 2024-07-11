@@ -8,8 +8,6 @@ public class SqlConstant {
     static final String SQL_TERMINAL = ";";
     static final String LEFT_PARENTHESES = "(";
     static final String RIGHT_PARENTHESES = ")";
-    static final String SURROUND = "`";
-    static final String DOT = ".";
     static final String ALL_COLUMN = "*";
     static final String STRAIGHT_JOIN_PREFIX = "STRAIGHT";
     static final String FULL_JOIN_PREFIX = "FULL";

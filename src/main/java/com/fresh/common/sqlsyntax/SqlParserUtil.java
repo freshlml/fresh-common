@@ -141,21 +141,17 @@ public class SqlParserUtil {
 
     public static boolean isNested(String str, int begin, int end) {
         char surroundChar = '\u0000';
-        boolean escape = false;
         int predict = 1;
 
         for(int i = end-1; i >= begin; i--) {
             char c = str.charAt(i);
 
-            if(surroundChar == '\'' || surroundChar == '\"') {
-                if(c == surroundChar && !escape) {
-                    surroundChar = '\u0000';
-                    escape = false;
-                } else if(c == '\\') {
-                    escape = !escape;
-                } else {
-                    escape = false;
+            if((surroundChar == '\'' || surroundChar == '\"') && c == surroundChar) {
+                int j = i - 1;
+                while(j >= 0 && str.charAt(j) == '\\') {
+                    j--;
                 }
+                if((i - j) % 2 != 0) surroundChar = '\u0000';
             } else if(surroundChar == '`' && c == '`') {
                 surroundChar = '\u0000';
             } else if (surroundChar == '\u0000' && (c == '\'' || c == '\"' || c == '`')) {
@@ -211,6 +207,23 @@ public class SqlParserUtil {
         return -1;
     }
 
+    public static int findMatchedKey(String str, int idx, String key) {
+        if(idx < str.length() - 1 && (SqlUtils.ASCII_whitespace(str.charAt(idx + 1)))) {
+            idx++;
+            while(idx < str.length() && SqlUtils.ASCII_whitespace(str.charAt(idx))) {
+                idx++;
+            }
+            if(idx < str.length()) {
+                int sidx = StringUtils.indexOfIgnoreCase(str, key, idx);
+                if(sidx > -1 && idx == sidx && SqlParserUtil.keywordRightBound(str, key, sidx)) {
+                    return sidx + key.length();
+                }
+                return -1;
+            }
+            return -1;
+        }
+        return -1;
+    }
 
     public static void main(String[] argv) {
         System.out.println(findRelative("seLect seleCt frOm fRom (select * from table) ct;", 0, SqlKeyword.SELECT.getValue(), SqlKeyword.FROM.getValue()));
