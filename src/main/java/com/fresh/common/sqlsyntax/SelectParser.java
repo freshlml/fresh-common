@@ -1,8 +1,6 @@
 package com.fresh.common.sqlsyntax;
 
 
-import com.fresh.common.utils.sql.IllFormedSqlException;
-import com.fresh.common.utils.sql.SqlUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.fresh.common.utils.sql;
+package com.fresh.common.sqlsyntax;
 
 public class IllFormedSqlException extends RuntimeException {
     public IllFormedSqlException(String message) {

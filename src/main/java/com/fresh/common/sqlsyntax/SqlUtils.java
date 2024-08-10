@@ -1,4 +1,4 @@
-package com.fresh.common.utils.sql;
+package com.fresh.common.sqlsyntax;
 
 
 import java.util.Arrays;
