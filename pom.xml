@@ -11,7 +11,7 @@
     </parent>
 
     <groupId>com.fresh</groupId>
-    <artifactId>fresh-common</artifactId>
+    <artifactId>fresh-core</artifactId>
     <!--
     版本号格式: 主版本号.次版本号.序列号
       1. 起始版本号: 1.0.0, 位于名为 1.0(或者 1.0.x)的 git 分支
@@ -22,11 +22,11 @@
     -->
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <name>fresh-common</name>
-    <description>fresh-common</description>
-    <url>https://www.github.com/freshlml/fresh-common</url>
+    <name>fresh-core</name>
+    <description>fresh-core</description>
+    <url>https://www.github.com/freshlml/fresh-core</url>
     <scm>
-        <url>https://www.github.com/freshlml/fresh-common</url>
+        <url>https://www.github.com/freshlml/fresh-core</url>
     </scm>
 
     <properties>
