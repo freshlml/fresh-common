@@ -5,7 +5,7 @@ import java.util.List;
 
 public class SimpleLogicExpTest {
 
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
 
         SimpleLogicExp exp = null;
         //exp = SimpleLogicExp.of("p1 & p2 & p3");

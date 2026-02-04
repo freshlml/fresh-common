@@ -54,7 +54,7 @@ public class BizException extends RuntimeException {
     }
 
 
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
         Supplier<String> s = null;
         BizException e = new BizException(s/*, () -> "403"*/);
         System.out.println(e.getMessage());
