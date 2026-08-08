@@ -19,15 +19,14 @@ import java.util.Date;
  * 2、定义认证注解、切面/拦截器，校验token
  *
  *compare with arch-oauth2-auth's spring security + OAuth2 的 authorization-server实现
+ *
+ * 1、确认通信方: 请求方携带token，服务方校验token
+ * 2、信息明文: token加密
+ * 3、信息篡改: token加密时自定义的密钥串
+ * 4、token被拦截: https整个报文加密
  */
 public abstract class JWTUtils {
 
-    /**
-     * 1、确认通信方: 请求方携带token，服务方校验token
-     * 2、信息明文: token加密
-     * 3、信息篡改: token加密时自定义的密钥串
-     * 4、token被拦截: https整个报文加密
-     */
 
     /**
      * 不同用户签发的token不同，同一用户先后签发的token不同
@@ -48,7 +47,7 @@ public abstract class JWTUtils {
      */
 
     private static final String TOKEN_SECRET = "anNvbl93ZWJfdG9rZW4=";
-    private static Logger log = LoggerFactory.getLogger(JWTUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(JWTUtils.class);
 
     public static String token(String userId, String phone) {
         String token = null;
@@ -103,7 +102,7 @@ public abstract class JWTUtils {
          verifier.verify(token);
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
         String token = JWTUtils.token("1", "15623236821");
         System.out.println(token);
 

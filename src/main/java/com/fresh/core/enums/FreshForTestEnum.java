@@ -4,8 +4,8 @@ package com.fresh.core.enums;
 public enum FreshForTestEnum {
     SYSTEM("SYSTEM", "系统");
 
-    private String value;
-    private String text;
+    private final String value;
+    private final String text;
 
     FreshForTestEnum(String value, String text) {
         this.value = value;

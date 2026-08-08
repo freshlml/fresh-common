@@ -7,10 +7,10 @@ public enum ByteUnitEnum {
     KB("KB", 1024),
     MB("MB", 1024 * 1024),
     GB("GB", 1024 * 1024 * 1024),
-    TB("TB", 1024 * 1024 * 1024 * 1024);
+    TB("TB", 1024 * 1024 * 1024 * 1024L);
 
-    private String suffix;
-    private long size;
+    private final String suffix;
+    private final long size;
 
     ByteUnitEnum(String suffix, long size) {
         this.suffix = suffix;

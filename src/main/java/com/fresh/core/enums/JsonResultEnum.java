@@ -5,8 +5,8 @@ public enum JsonResultEnum {
     FAIL("-1", "FAIL"),
     PERMISSION_DENIED("403", "403");
 
-    private String code;
-    private String text;
+    private final String code;
+    private final String text;
 
     JsonResultEnum(String code, String text) {
         this.code = code;

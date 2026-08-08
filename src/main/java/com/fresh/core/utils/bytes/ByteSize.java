@@ -129,7 +129,7 @@ public class ByteSize {
         return Long.hashCode(this.bytes);
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
         //ByteSize.parse("");
         //ByteSize.parse("123");
         //ByteSize.parse("123H");
