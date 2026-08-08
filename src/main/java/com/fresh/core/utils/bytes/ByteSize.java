@@ -8,16 +8,8 @@ import com.fresh.core.utils.StringUtils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- *封装字节数，eg: 1B, 2KB, 3MB, 4GB, 5TB
- *
- */
 public class ByteSize {
 
-    private static final long KB = 1024;
-    private static final long MB = KB * 1024;
-    private static final long GB = MB * 1024;
-    private static final long TB = GB * 1024;
     private static final Pattern PATTERN = Pattern.compile("^([+\\-]?\\d+)([a-zA-Z]{0,2})$");
 
     private final long bytes;
@@ -35,85 +27,111 @@ public class ByteSize {
         return new ByteSize(bytes);
     }
 
+    public static ByteSize ofBytes(long mount, ByteUnitEnum unit) {
+        return new ByteSize(Math.multiplyExact(mount, unit.getSize()));
+    }
+
     /**
      *
-     * @param mount 多少个KB
+     * @param mount 多少个 KB
      * @throws ArithmeticException if the mount * KB overflows a long
      * @return ByteSize
      */
     public static ByteSize ofKBytes(long mount) {
-        return new ByteSize(Math.multiplyExact(mount, KB));
+        return ofBytes(mount, ByteUnitEnum.KB);
     }
 
     /**
      *
-     * @param mount 多少个MB
+     * @param mount 多少个 MB
      * @throws ArithmeticException if the mount * MB overflows a long
      * @return ByteSize
      */
     public static ByteSize ofMBytes(long mount) {
-        return new ByteSize(Math.multiplyExact(mount, MB));
+        return new ByteSize(Math.multiplyExact(mount, ByteUnitEnum.MB.getSize()));
     }
 
     /**
      *
-     * @param mount 多少个GB
+     * @param mount 多少个 GB
      * @throws ArithmeticException if the mount * GB overflows a long
      * @return ByteSize
      */
     public static ByteSize ofGBytes(long mount) {
-        return new ByteSize(Math.multiplyExact(mount, GB));
+        return new ByteSize(Math.multiplyExact(mount, ByteUnitEnum.GB.getSize()));
     }
 
     /**
      *
-     * @param mount 多少个TB
+     * @param mount 多少个 TB
      * @throws ArithmeticException if the mount * TB overflows a long
      * @return ByteSize
      */
     public static ByteSize ofTBytes(long mount) {
-        return new ByteSize(Math.multiplyExact(mount, TB));
+        return new ByteSize(Math.multiplyExact(mount, ByteUnitEnum.TB.getSize()));
     }
 
     /**
      *
-     * @param text
-     * @throws IllegalArgumentException 当数值超过long
+     * @param text the text to parse
      * @return ByteSize
+     * @throws BizException          if text can not match PATTERN
+     * @throws NullPointerException  if text is null
+     * @throws NumberFormatException if the text does not contain a parsable number
+     * @throws ArithmeticException   if the result overflows a long
      */
     public static ByteSize parse(CharSequence text) {
         return parse(text, null);
     }
+
+    /**
+     *
+     * @param text the text to parse
+     * @param unit the default ByteUnitEnum
+     * @return ByteSize
+     * @throws BizException          if text can not match PATTERN
+     * @throws NullPointerException  if text is null
+     * @throws NumberFormatException if the text does not contain a parsable number
+     * @throws ArithmeticException   if the result overflows a long
+     */
     public static ByteSize parse(CharSequence text, ByteUnitEnum unit) {
-        AssertUtils.notNull(text, "text文本不能为null");
+        AssertUtils.notNull(text, "text 文本不能为 null");
         ByteUnitEnum defaultUnit = unit != null ? unit : ByteUnitEnum.B;
 
         Matcher matcher = PATTERN.matcher(text);
-        AssertUtils.isTrue(matcher.matches(),"text不能匹配格式pattern");
+        AssertUtils.isTrue(matcher.matches(),"text 不能匹配格式 pattern");
 
         String suffix = matcher.group(2);
         ByteUnitEnum unitNow = ByteUnitEnum.convert(suffix);
-        AssertUtils.ifTrue( (unitNow == null && !StringUtils.isEmpty(suffix)), "text文本单位错误");
+        AssertUtils.ifTrue( (unitNow == null && !StringUtils.isEmpty(suffix)), "text 文本单位错误");
         if(unitNow == null) unitNow = defaultUnit;
 
-        try {
-            Long amount = Long.valueOf(matcher.group(1)); //group(1)可能超过long
-            return ByteSize.ofBytes(Math.multiplyExact(amount, unitNow.getSize()));
-        } catch (Exception e) {
-            throw new IllegalArgumentException("'" + text + "' is too large", e);
-        }
+        long amount = Long.parseLong(matcher.group(1));
+        return ByteSize.ofBytes(Math.multiplyExact(amount, unitNow.getSize()));  //may overflow
     }
 
-    public long toBytes() { return this.bytes; }
-    public long toKBytes() { return this.bytes / KB; }
-    public long toMBytes() { return this.bytes / MB; }
-    public long toGBytes() { return this.bytes / GB; }
-    public long toTBytes() { return this.bytes / TB; }
-    public boolean isNegative() { return this.bytes < 0; }
+    public long toBytes() {
+        return this.bytes;
+    }
+    public long toKBytes() {
+        return this.bytes / ByteUnitEnum.KB.getSize();
+    }
+    public long toMBytes() {
+        return this.bytes / ByteUnitEnum.MB.getSize();
+    }
+    public long toGBytes() {
+        return this.bytes / ByteUnitEnum.GB.getSize();
+    }
+    public long toTBytes() {
+        return this.bytes / ByteUnitEnum.TB.getSize();
+    }
+    public boolean isNegative() {
+        return this.bytes < 0;
+    }
 
     @Override
     public String toString() {
-        return this.bytes + "Byte";
+        return this.bytes + "Bytes";
     }
 
     @Override

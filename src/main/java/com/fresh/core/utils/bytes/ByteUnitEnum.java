@@ -9,17 +9,19 @@ public enum ByteUnitEnum {
     GB("GB", 1024 * 1024 * 1024),
     TB("TB", 1024 * 1024 * 1024 * 1024L);
 
-    private final String suffix;
+    private final String value;
     private final long size;
 
-    ByteUnitEnum(String suffix, long size) {
-        this.suffix = suffix;
+    ByteUnitEnum(String value, long size) {
+        this.value = value;
         this.size = size;
     }
-    public long getSize() {return this.size;}
+    public long getSize() {
+        return this.size;
+    }
 
-    public static ByteUnitEnum convert(String suffix) {
-        return Arrays.stream(ByteUnitEnum.values()).filter(per -> per.suffix.equals(suffix)).findFirst().orElse(null);
+    public static ByteUnitEnum convert(String value) {
+        return Arrays.stream(ByteUnitEnum.values()).filter(per -> per.value.equals(value)).findFirst().orElse(null);
     }
 
 }
