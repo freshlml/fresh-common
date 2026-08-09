@@ -8,7 +8,7 @@ import java.util.List;
 
 public abstract class NumberUnitUtilsTest {
 
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
 
         toZs();
         System.out.println("##################");
