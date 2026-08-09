@@ -1,7 +1,7 @@
 package com.fresh.core.utils.bytes;
 
 import com.fresh.core.exception.BizException;
-import com.fresh.core.utils.AssertUtils;
+import com.fresh.core.utils.Assert;
 import com.fresh.core.utils.NumberUnitUtils;
 import com.fresh.core.utils.StringUtils;
 
@@ -27,6 +27,13 @@ public class ByteSize {
         return new ByteSize(bytes);
     }
 
+    /**
+     *
+     * @param mount  数量
+     * @param unit   单位
+     * @return ByteSize
+     * @throws ArithmeticException if the result overflows a long
+     */
     public static ByteSize ofBytes(long mount, ByteUnitEnum unit) {
         return new ByteSize(Math.multiplyExact(mount, unit.getSize()));
     }
@@ -34,8 +41,8 @@ public class ByteSize {
     /**
      *
      * @param mount 多少个 KB
-     * @throws ArithmeticException if the mount * KB overflows a long
      * @return ByteSize
+     * @throws ArithmeticException if the mount * KB overflows a long
      */
     public static ByteSize ofKBytes(long mount) {
         return ofBytes(mount, ByteUnitEnum.KB);
@@ -44,8 +51,8 @@ public class ByteSize {
     /**
      *
      * @param mount 多少个 MB
-     * @throws ArithmeticException if the mount * MB overflows a long
      * @return ByteSize
+     * @throws ArithmeticException if the mount * MB overflows a long
      */
     public static ByteSize ofMBytes(long mount) {
         return new ByteSize(Math.multiplyExact(mount, ByteUnitEnum.MB.getSize()));
@@ -54,8 +61,8 @@ public class ByteSize {
     /**
      *
      * @param mount 多少个 GB
-     * @throws ArithmeticException if the mount * GB overflows a long
      * @return ByteSize
+     * @throws ArithmeticException if the mount * GB overflows a long
      */
     public static ByteSize ofGBytes(long mount) {
         return new ByteSize(Math.multiplyExact(mount, ByteUnitEnum.GB.getSize()));
@@ -64,8 +71,8 @@ public class ByteSize {
     /**
      *
      * @param mount 多少个 TB
-     * @throws ArithmeticException if the mount * TB overflows a long
      * @return ByteSize
+     * @throws ArithmeticException if the mount * TB overflows a long
      */
     public static ByteSize ofTBytes(long mount) {
         return new ByteSize(Math.multiplyExact(mount, ByteUnitEnum.TB.getSize()));
@@ -89,25 +96,27 @@ public class ByteSize {
      * @param text the text to parse
      * @param unit the default ByteUnitEnum
      * @return ByteSize
-     * @throws BizException          if text can not match PATTERN
-     * @throws NullPointerException  if text is null
-     * @throws NumberFormatException if the text does not contain a parsable number
-     * @throws ArithmeticException   if the result overflows a long
+     * @throws NullPointerException       if text is null
+     * @throws IllegalArgumentException   if text can not match PATTERN
+     * @throws NumberFormatException      if the text does not contain a parsable number
+     * @throws ArithmeticException        if the result overflows a long
      */
     public static ByteSize parse(CharSequence text, ByteUnitEnum unit) {
-        AssertUtils.notNull(text, "text 文本不能为 null");
+        Assert.notNull(text, "text 不能为 null");
         ByteUnitEnum defaultUnit = unit != null ? unit : ByteUnitEnum.B;
 
         Matcher matcher = PATTERN.matcher(text);
-        AssertUtils.isTrue(matcher.matches(),"text 不能匹配格式 pattern");
+        Assert.isTrue(matcher.matches(), "text 格式不对");
 
         String suffix = matcher.group(2);
         ByteUnitEnum unitNow = ByteUnitEnum.convert(suffix);
-        AssertUtils.ifTrue( (unitNow == null && !StringUtils.isEmpty(suffix)), "text 文本单位错误");
+
+        if(unitNow == null && !StringUtils.isEmpty(suffix)) throw new IllegalArgumentException("text 格式不对: [" + suffix + "]");
+
         if(unitNow == null) unitNow = defaultUnit;
 
         long amount = Long.parseLong(matcher.group(1));
-        return ByteSize.ofBytes(Math.multiplyExact(amount, unitNow.getSize()));  //may overflow
+        return ByteSize.ofBytes(amount, unitNow);
     }
 
     public long toBytes() {
