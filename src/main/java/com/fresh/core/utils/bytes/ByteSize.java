@@ -110,8 +110,8 @@ public class ByteSize {
 
         String suffix = matcher.group(2);
         ByteUnitEnum unitNow = ByteUnitEnum.convert(suffix);
-
-        if(unitNow == null && !StringUtils.isEmpty(suffix)) throw new IllegalArgumentException("text 格式不对: [" + suffix + "]");
+        
+        if(unitNow == null && suffix != null && !suffix.isEmpty()) throw new IllegalArgumentException("text 格式不对: [" + suffix + "]");
 
         if(unitNow == null) unitNow = defaultUnit;
 
