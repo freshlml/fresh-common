@@ -160,22 +160,22 @@ public abstract class NumberUnitUtils {
      * @return 转换后的值
      */
     public static <T extends Number> T convertNumberToTargetClazz(Number number, Class<T> targetClazz) {
-        AssertUtils.ifTrue(number==null, () -> "参数number[Number]不能为空", null);
-        AssertUtils.ifTrue(targetClazz==null, () -> "参数clazz[Class]不能为空", null);
+        Assert.notNull(number, "参数 number[Number] 不能为空");
+        Assert.notNull(targetClazz, "参数 clazz[Class] 不能为空");
 
         if(targetClazz.isInstance(number)) {
             return (T) number;
         } else if(Byte.class == targetClazz || Byte.TYPE == targetClazz) {
             long l = resolveLongValue(number, targetClazz);
-            AssertUtils.isTrue(l >= Byte.MIN_VALUE && l <= Byte.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
+            Assert.isTrue(l >= Byte.MIN_VALUE && l <= Byte.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
             return (T) Byte.valueOf(number.byteValue());
         } else if(Short.class == targetClazz || Short.TYPE == targetClazz) {
             long l = resolveLongValue(number, targetClazz);
-            AssertUtils.isTrue(l >= Short.MIN_VALUE && l <= Short.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
+            Assert.isTrue(l >= Short.MIN_VALUE && l <= Short.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
             return (T) Short.valueOf(number.shortValue());
         } else if(Integer.class == targetClazz || Integer.TYPE == targetClazz) {
             long l = resolveLongValue(number, targetClazz);
-            AssertUtils.isTrue(l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
+            Assert.isTrue(l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE, "参数number["+number.getClass().getName()+"]的值{"+l+"}大于["+targetClazz.getName()+"]允许的最大值");
             return (T) Integer.valueOf(number.intValue());
         } else if(Long.class == targetClazz || Long.TYPE == targetClazz) {
             long l = resolveLongValue(number, targetClazz);
@@ -193,9 +193,9 @@ public abstract class NumberUnitUtils {
         } else if(BigDecimal.class == targetClazz) {
             return (T) new BigDecimal(number.toString());
         } else {
-            AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]不能转化为"+targetClazz.getName(), null);
+            throw new IllegalArgumentException("参数number["+number.getClass().getName()+"]不能转化为"+targetClazz.getName());
         }
-        return null;
+        //return null;
     }
 
     private static long resolveLongValue(Number number, Class<? extends Number> clazz) {
@@ -207,7 +207,7 @@ public abstract class NumberUnitUtils {
         }
         if (bigInteger != null && (bigInteger.compareTo(LONG_MIN) < 0 || bigInteger.compareTo(LONG_MAX) > 0)) {
             final String ngiStr = bigInteger.toString();
-            AssertUtils.ifTrue(true, () -> "参数number["+number.getClass().getName()+"]的数值{"+ngiStr+"}大于参数clazz["+clazz.getName()+"]允许的最大值", null);
+            throw new IllegalArgumentException("参数number["+number.getClass().getName()+"]的数值{"+ngiStr+"}大于参数clazz["+clazz.getName()+"]允许的最大值");
         }
         return number.longValue();
     }
@@ -230,8 +230,8 @@ public abstract class NumberUnitUtils {
      * @return
      */
     public static <T extends Number> T parseTextToTargetNumber(String text, Class<T> clazz) {
-        AssertUtils.ifTrue(text==null, () -> "text[String]不能为空", null);
-        AssertUtils.ifTrue(clazz==null, () -> "参数clazz[Class]不能为空", null);
+        Assert.notNull(text, "text[String] 不能为空");
+        Assert.notNull(clazz, "参数 clazz[Class] 不能为空");
 
         String trimedText = StringUtils.trimAllWhitespace(text);
         if(Byte.class == clazz || Byte.TYPE == clazz) {
@@ -251,9 +251,9 @@ public abstract class NumberUnitUtils {
         } else if (BigDecimal.class == clazz || Number.class == clazz) {
             return (T) new BigDecimal(trimedText);
         } else {
-            AssertUtils.ifTrue(true, () -> "参数text["+text+"]不能解析成"+clazz.getName(), null);
+            throw new IllegalArgumentException("参数text["+text+"]不能解析成"+clazz.getName());
         }
-        return null;
+        //return null;
     }
 
     private static BigInteger decodeBigInteger(String value) {
@@ -286,7 +286,6 @@ public abstract class NumberUnitUtils {
 
 
     public static <T extends Number> T convertToNumber(Object o, Class<T> clazz) {
-        //AssertUtils.notNull(o, "参数o不能为空");
 
         if(o instanceof Number) {
             return convertNumberToTargetClazz((Number)o, clazz);

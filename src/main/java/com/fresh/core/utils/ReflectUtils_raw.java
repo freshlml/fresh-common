@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class ReflectUtils_raw {
 
     private static final Predicate<Method> isNotBridge = method -> !method.isBridge();

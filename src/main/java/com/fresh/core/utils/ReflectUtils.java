@@ -1,7 +1,5 @@
 package com.fresh.core.utils;
 
-import com.fresh.core.exception.BizException;
-
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Consumer;
@@ -36,9 +34,10 @@ public abstract class ReflectUtils {
      * @param paramTypes 参数
      * @return Constructor or null
      * @throws SecurityException propagates Class#getConstructor的SecurityException
+     * @throws NullPointerException if the specified clazz is null
      */
     public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... paramTypes) throws SecurityException {
-        AssertUtils.notNull(clazz, "参数clazz不能为空");
+        Assert.notNull(clazz, "参数 clazz 不能为空");
 
         try {
             return clazz.getConstructor(paramTypes);
@@ -62,9 +61,10 @@ public abstract class ReflectUtils {
      * @param paramTypes 参数
      * @return Constructor or null
      * @throws SecurityException propagates Class#getDeclaredConstructor的SecurityException
+     * @throws NullPointerException if the specified clazz is null
      */
     public static <T> Constructor<T> getDeclaredConstructor(Class<T> clazz, Class<?>... paramTypes) throws SecurityException {
-        AssertUtils.notNull(clazz, "参数clazz不能为空");
+        Assert.notNull(clazz, "参数 clazz 不能为空");
 
         try {
             Constructor<T> c = clazz.getDeclaredConstructor(paramTypes);
@@ -88,21 +88,17 @@ public abstract class ReflectUtils {
      * @throws InstantiationException       实例化失败，如构造器的declaring class is abstract等问题
      * @throws InvocationTargetException    构造器执行抛出的异常，封装成InvocationTargetException抛出
      * @throws IllegalArgumentException     参数数量不匹配，类型不匹配等参数问题
-     * @throws BizException                 after setAccessible, still can not accessible
+     * @throws NullPointerException         if the specified constructor is null
      */
     public static <T> T newInstance(Constructor<T> constructor, Object ... initargs)
-            throws InstantiationException, InvocationTargetException, IllegalArgumentException, BizException {
-        AssertUtils.notNull(constructor, "constructor参数不能为空");
+            throws InstantiationException, InvocationTargetException, IllegalArgumentException, IllegalAccessException {
+        Assert.notNull(constructor, "constructor 参数不能为空");
 
         try {
             return constructor.newInstance(initargs);
         } catch (IllegalAccessException e) {
             makeAccessible(constructor);
-            try {
-                return constructor.newInstance(initargs);
-            } catch (IllegalAccessException ne) {
-                throw new BizException(() -> "after setAccessible, still can not accessible");
-            }
+            return constructor.newInstance(initargs);
         }
     }
 
@@ -147,10 +143,11 @@ public abstract class ReflectUtils {
      * @param paramTypes 参数
      * @return Method or null
      * @throws SecurityException propagate Class#getMethod的SecurityException
+     * @throws NullPointerException         if the specified clazz or method is null
      */
     public static Method getMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) throws SecurityException {
-        AssertUtils.notNull(clazz, "参数clazz不能为空");
-        AssertUtils.notNull(methodName, "参数methodName不能为空");
+        Assert.notNull(clazz, "参数 clazz 不能为空");
+        Assert.notNull(methodName, "参数 methodName 不能为空");
 
         try {
             return clazz.getMethod(methodName, paramTypes);
@@ -176,10 +173,11 @@ public abstract class ReflectUtils {
      * @param paramTypes 参数，paramTypes不传，或者paramTypes=null,表示获取无参方法
      * @return Method or null
      * @throws SecurityException propagate Class#getDeclarredMethod的SecurityException
+     * @throws NullPointerException         if the specified clazz or method is null
      */
     public static Method getDeclaredMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) throws SecurityException {
-        AssertUtils.notNull(clazz, "参数clazz不能为空");
-        AssertUtils.notNull(methodName, "参数methodName不能为空");
+        Assert.notNull(clazz, "参数 clazz 不能为空");
+        Assert.notNull(methodName, "参数 methodName 不能为空");
 
         try {
             Method method = clazz.getDeclaredMethod(methodName, paramTypes);
@@ -215,10 +213,11 @@ public abstract class ReflectUtils {
      * @throws InvocationTargetException  Method执行抛出的异常，封装成InvocationTargetException后抛出
      * @throws IllegalArgumentException   if the Method is an instance method and the param obj.class is not assignable to Method的declaring class or 参数不匹配
      * @throws ExceptionInInitializerError if the initialization provoked by this method fails
+     * @throws NullPointerException         if the specified method is null
      */
     public static Object invoke(Method method, Object obj, Object... args)
-            throws InvocationTargetException, IllegalArgumentException, ExceptionInInitializerError {
-        AssertUtils.notNull(method, "参数method不能为空");
+            throws InvocationTargetException, IllegalArgumentException, ExceptionInInitializerError, IllegalAccessException {
+        Assert.notNull(method, "参数 method 不能为空");
 
         if(!Modifier.isStatic(method.getModifiers()) && obj == null) {
             return null;
@@ -228,17 +227,8 @@ public abstract class ReflectUtils {
             return method.invoke(obj, args);
         } catch (IllegalAccessException e) {
             makeAccessible(method);
-            try {
-                return method.invoke(obj, args);
-            } catch (IllegalAccessException ne) {
-                throw new BizException(() -> "after setAccessible, still can not accessible");
-            } catch (InvocationTargetException ne) {
-                throw ne;
-            }
-        } catch (InvocationTargetException e) {
-            throw e;
+            return method.invoke(obj, args);
         }
-        
     }
 
     /*
@@ -255,7 +245,7 @@ public abstract class ReflectUtils {
      * 返回param bridgeMethod itself if 它不是桥接方法 or 与该桥接方法有相同方法签名and more specific return type的bridged method or null
      */
     private static Method findBridgedMethodSignature(Method bridgeMethod) {
-        AssertUtils.notNull(bridgeMethod, "参数bridgeMethod不能为空");
+        Assert.notNull(bridgeMethod, "参数 bridgeMethod 不能为空");
 
         if(!bridgeMethod.isBridge()) return bridgeMethod;
 
@@ -273,7 +263,7 @@ public abstract class ReflectUtils {
      * 返回param bridgeMethod itself if 它不是桥接方法 or bridged method or null(?)
      */
     private static Method findBridgedMethod(Method bridgeMethod) {
-        AssertUtils.notNull(bridgeMethod, "参数bridgeMethod不能为空");
+        Assert.notNull(bridgeMethod, "参数 bridgeMethod 不能为空");
 
         if(!bridgeMethod.isBridge()) return bridgeMethod;
 
@@ -315,7 +305,7 @@ public abstract class ReflectUtils {
      * 返回method itself if method是桥接方法 or method的桥接方法 or null if method 没有桥接方法
      */
     private static Method findBridgeMethod(Method method) {
-        AssertUtils.notNull(method, "参数method不能为空");
+        Assert.notNull(method, "参数 method 不能为空");
 
         if(method.isBridge()) return method;
 
@@ -375,13 +365,13 @@ public abstract class ReflectUtils {
         private final Predicate<Method> predicate;
 
         public MatchFirstMethodProcessor(Predicate<Method> predicate) {
-            AssertUtils.notNull(predicate, "参数predicate不能为空");
+            Assert.notNull(predicate, "参数 predicate 不能为空");
             this.predicate = predicate;
         }
 
         /*//returnType参数用于区分相同方法签名的场景
         public static Predicate<Method> defaultMatcher(String methodName, Class<?> returnType, Class<?>... paramTypes) {
-            AssertUtils.notNull(methodName, "参数methodName不能为空");
+            Assert.notNull(methodName, "参数 methodName 不能为空");
 
             return method -> method.getName().equals(methodName) &&
                    ((paramTypes == null && method.getParameterCount()==0) ||
@@ -389,7 +379,7 @@ public abstract class ReflectUtils {
                    (returnType == null || returnType == method.getReturnType());
         }*/
         public static Predicate<Method> defaultMatcher(String methodName, Class<?>... paramTypes) {
-            AssertUtils.notNull(methodName, "参数methodName不能为空");
+            Assert.notNull(methodName, "参数 methodName 不能为空");
 
             return method -> method.getName().equals(methodName) &&
                     ((paramTypes == null && method.getParameterCount()==0) ||
@@ -548,10 +538,11 @@ public abstract class ReflectUtils {
      * @param fieldName fieldName, 不能为空
      * @return Field or null
      * @throws SecurityException propagates Class#getField的SecurityException
+     * @throws NullPointerException if the specified clazz or field is null
      */
     public static Field getField(Class<?> clazz, String fieldName) throws SecurityException {
-        AssertUtils.notNull(clazz, () -> "参数clazz不能为空", null);
-        AssertUtils.notNull(fieldName, () -> "参数fieldName不能为空", null);
+        Assert.notNull(clazz, "参数 clazz 不能为空");
+        Assert.notNull(fieldName, "参数 fieldName 不能为空");
 
         try {
             return clazz.getField(fieldName);
@@ -573,10 +564,11 @@ public abstract class ReflectUtils {
      * @param fieldName fieldName，不能为空
      * @return Field or null
      * @throws SecurityException propagates Class#getField的SecurityException
+     * @throws NullPointerException if the specified clazz or field is null
      */
     public static Field getDeclaredField(Class<?> clazz, String fieldName) throws SecurityException {
-        AssertUtils.notNull(clazz, () -> "参数clazz不能为空", null);
-        AssertUtils.notNull(fieldName, () -> "参数fieldName不能为空", null);
+        Assert.notNull(clazz, "参数 clazz 不能为空");
+        Assert.notNull(fieldName, "参数 fieldName 不能为空");
 
         try {
             Field field = clazz.getDeclaredField(fieldName);
@@ -606,11 +598,11 @@ public abstract class ReflectUtils {
      * @return Field的值 or null when Field is instance field and param obj is null
      * @throws IllegalArgumentException     if the param obj.class is not assignable to Field的declaring class
      * @throws ExceptionInInitializerError  if the initialization provoked by this method fails
-     * @throws BizException                 after setAccessible, still can not accessible
+     * @throws NullPointerException if the specified field is null
      */
     public static Object get(Field field, Object obj)
-            throws IllegalArgumentException, ExceptionInInitializerError, BizException {
-        AssertUtils.notNull(field, "参数field不能为空");
+            throws IllegalArgumentException, ExceptionInInitializerError, IllegalAccessException {
+        Assert.notNull(field, "参数 field 不能为空");
 
         if(!Modifier.isStatic(field.getModifiers()) && obj == null) {
             return null;
@@ -620,11 +612,7 @@ public abstract class ReflectUtils {
             return field.get(obj);
         } catch (IllegalAccessException e) {
             makeAccessible(field);
-            try {
-                return field.get(obj);
-            } catch (IllegalAccessException ne) {
-                throw new BizException(() -> "after setAccessible, still can not accessible");
-            }
+            return field.get(obj);
         }
 
     }
@@ -641,11 +629,11 @@ public abstract class ReflectUtils {
      * @param value value
      * @throws IllegalArgumentException     if Field is instance filed and param obj.class is not assignable to Filed的declaring class 或者 参数类型转化失败
      * @throws ExceptionInInitializerError  if the initialization provoked by this method fails
-     * @throws BizException                 after setAccessible, still can not accessible
+     * @throws NullPointerException if the specified field is null
      */
     public static void set(Field field, Object obj, Object value)
-            throws IllegalArgumentException, ExceptionInInitializerError, BizException {
-        AssertUtils.notNull(field, "参数field不能为空");
+            throws IllegalArgumentException, ExceptionInInitializerError, IllegalAccessException {
+        Assert.notNull(field, "参数 field 不能为空");
 
         if(!Modifier.isStatic(field.getModifiers()) && obj == null) {
             return ;
@@ -658,11 +646,7 @@ public abstract class ReflectUtils {
             field.set(obj, value);
         } catch (IllegalAccessException e) {
             makeAccessible(field);
-            try {
-                field.set(obj, value);
-            } catch (IllegalAccessException ne) {
-                throw new BizException(() -> "after setAccessible, still can not accessible");
-            }
+            field.set(obj, value);
         }
 
     }
@@ -676,10 +660,11 @@ public abstract class ReflectUtils {
      * @param fieldName fieldName, 不能为空
      * @return Field or null if not find
      * @throws SecurityException propagates Class#getDeclaredField的SecurityException
+     * @throws NullPointerException if the specified clazz or field is null
      */
     public static Field findDeclaredField(Class<?> clazz, String fieldName) throws SecurityException {
-        AssertUtils.notNull(clazz, "参数clazz不能为空");
-        AssertUtils.notNull(fieldName, "fieldName不能为空");
+        Assert.notNull(clazz, "参数 clazz 不能为空");
+        Assert.notNull(fieldName, "fieldName 不能为空");
 
         Field field = findDeclaredFieldHelp(clazz, fieldName);
         if(field != null) makeAccessible(field);
@@ -728,10 +713,11 @@ public abstract class ReflectUtils {
      * @param fieldType fieldType
      * @return Field or null if not found
      * @throws SecurityException propagates Class#getDeclaredField的SecurityException
+     * @throws NullPointerException if the specified clazz or field is null
      */
     public static Field findDeclaredField(Class<?> clazz, String fieldName, Class<?> fieldType) throws SecurityException {
-        AssertUtils.notNull(clazz, () -> "参数clazz不能为空", null);
-        AssertUtils.notNull(fieldName, () -> "参数fieldName不能为空", null);
+        Assert.notNull(clazz, "参数 clazz 不能为空");
+        Assert.notNull(fieldName, "参数 fieldName 不能为空");
 
         Field result = findDeclaredFieldPredicate(clazz, field -> field.getName().equals(fieldName) && (fieldType == null || fieldType == field.getType()));
         if(result != null) makeAccessible(result);
@@ -774,11 +760,12 @@ public abstract class ReflectUtils {
      * 返回结果的按查找路径分块有序
      *
      * @param clazz Class, 不能为空
-     * @return Field数组
+     * @return Field 数组
      * @throws SecurityException propagates Class#getDeclaredFields的SecurityException
+     * @throws NullPointerException if the specified clazz is null
      */
     public static Field[] findDeclaredFields(Class<?> clazz) throws SecurityException {
-        AssertUtils.notNull(clazz, () -> "参数clazz不能为空", null);
+        Assert.notNull(clazz, "参数 clazz 不能为空");
 
         List<Field> result = new ArrayList<>();
         findDeclaredFieldConsumer(clazz, result::add);
@@ -872,7 +859,7 @@ public abstract class ReflectUtils {
         private String prevPackageName = null;
 
         public AbstractFieldRecursiveProcessor(Predicate<Field> predicate) {
-            AssertUtils.notNull(predicate, "参数predicate不能为空");
+            Assert.notNull(predicate, "参数 predicate 不能为空");
             this.predicate = predicate;
         }
 
@@ -947,7 +934,7 @@ public abstract class ReflectUtils {
         private final Predicate<Field> predicate;
 
         public MatchFirstFieldProcessor(Predicate<Field> predicate) {
-            AssertUtils.notNull(predicate, "参数predicate不能为空");
+            Assert.notNull(predicate, "参数 predicate 不能为空");
             this.predicate = predicate;
         }
         @Override

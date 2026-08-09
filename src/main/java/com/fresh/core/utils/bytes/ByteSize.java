@@ -166,14 +166,10 @@ public class ByteSize {
 
         ByteSize s = ByteSize.parse("111111111KB");
         System.out.println(s.toBytes());
-        try {
-            int bytes = NumberUnitUtils.convertNumberToTargetClazz(s.toBytes(), int.class);
-            byte[] bs = new byte[bytes];
-            System.out.println(bs.length);
-        } catch (BizException e) {
-            System.out.println(e);
-        }
 
+        int bytes = NumberUnitUtils.convertNumberToTargetClazz(s.toBytes(), int.class);
+        byte[] bs = new byte[bytes];
+        System.out.println(bs.length);
     }
 
 

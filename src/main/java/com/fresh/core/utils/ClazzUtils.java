@@ -15,15 +15,15 @@ public abstract class ClazzUtils {
 
     /** 数组后缀 */
     private static final String ARRAYS_SUFFIX = "[]";
-    /** 非primitive的array class的name的前缀 */
+    /** 非 primitive 的 array class 的 name 的前缀 */
     private static final String NON_PRIMITIVE_ARRAYS_PREFIX = "[L";
-    /** 非primitive的array class的name的后缀 */
+    /** 非 primitive 的 array class 的 name 的后缀 */
     private static final String NON_PRIMITIVE_ARRAYS_SUFFIX = ";";
     /** 内部类分隔符 */
     private static final String INNER_CLASS_SEP = "$";
-    /**path分隔符*/
+    /** path 分隔符*/
     private static final String PATH_SEP = "/";
-    /**package分隔符*/
+    /** package 分隔符*/
     private static final String PACKAGE_SEP = ".";
 
     /**
@@ -140,9 +140,10 @@ public abstract class ClazzUtils {
      * @param classLoader ClassLoader
      * @exception ClassNotFoundException Class#forName的ClassNotFoundException
      * @return Class or null if can not find
+     * @throws NullPointerException if the specified clazz is null
      */
     public static Class<?> forName(String className, ClassLoader classLoader) throws ClassNotFoundException {
-        AssertUtils.notNull(className, "参数className不能为null");
+        Assert.notNull(className, "参数 className 不能为 null");
 
         if(isStringPrimitive(className)) {
             return resolvePrimitive(className);
@@ -180,10 +181,11 @@ public abstract class ClazzUtils {
      * @param left left
      * @param right right
      * @return whether assignable
+     * @throws NullPointerException if the specified left or right is null
      */
     public static boolean isAssignableFrom(Class<?> left, Class<?> right) {
-        AssertUtils.notNull(left, "参数left不能为null");
-        AssertUtils.notNull(right, "参数right不能为null");
+        Assert.notNull(left, "参数 left 不能为 null");
+        Assert.notNull(right, "参数 right 不能为 null");
 
         if(left.isAssignableFrom(right)) {
             return true;
