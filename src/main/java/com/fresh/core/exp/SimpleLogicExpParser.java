@@ -1,6 +1,6 @@
 package com.fresh.core.exp;
 
-import com.fresh.core.utils.AssertUtils;
+import com.fresh.core.utils.Assert;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,11 +36,11 @@ public abstract class SimpleLogicExpParser {
                     state = null;
                     break;
                 case "&":
-                    AssertUtils.isTrue(state == null || state == ParserState.AND, () -> "invalid expression["+expression+"]: when the expression or sub-expression is using the |, here con not using &", null);
+                    Assert.isTrue(state == null || state == ParserState.AND, "invalid expression[" + expression + "]: when the expression or sub-expression is using the |, here con not using &");
                     state = ParserState.AND;
                     break;
                 case "|":
-                    AssertUtils.isTrue(state == null || state == ParserState.OR, () -> "invalid expression["+expression+"]: when the expression or sub-expression is using the &, here con not using |", null);
+                    Assert.isTrue(state == null || state == ParserState.OR, "invalid expression[" + expression + "]: when the expression or sub-expression is using the &, here con not using |");
                     state = ParserState.OR;
                     break;
                 case "!":
@@ -58,7 +58,8 @@ public abstract class SimpleLogicExpParser {
     }
 
     private static SimpleLogicExp merge(List<SimpleLogicExp> list, ParserState state, String expression) {
-        AssertUtils.isTrue(!list.isEmpty(), () -> "invalid expression["+expression+"]", null);
+        Assert.isTrue(!list.isEmpty(), "invalid expression[" + expression + "]");
+
         if(list.size() == 1) return list.get(0);
         SimpleLogicExp exp = null;
         if(list.size() > 1) {

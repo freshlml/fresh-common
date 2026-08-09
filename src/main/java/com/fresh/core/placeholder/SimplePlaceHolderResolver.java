@@ -1,6 +1,6 @@
 package com.fresh.core.placeholder;
 
-import com.fresh.core.utils.AssertUtils;
+import com.fresh.core.utils.Assert;
 
 /**
  * PlaceHolder解析器，对给定的String,解析替换其中的placeholder
@@ -71,8 +71,9 @@ public class SimplePlaceHolderResolver {
     }
 
     public String resolve(String value, PlaceHolderSourceValueResolver placeHolderSourceValueResolver) {
-        AssertUtils.ifTrue(value == null, () -> "参数value不能为空", null);
-        AssertUtils.ifTrue(placeHolderSourceValueResolver == null, () -> "参数placeHolderSourceValueResolver不能为空", null);
+        Assert.notNull(value, "参数 value 不能为空");
+        Assert.notNull(placeHolderSourceValueResolver, "参数 placeHolderSourceValueResolver 不能为空");
+
         int findPrefix = value.indexOf(prefix);
 
         if(findPrefix == -1) return value;
@@ -106,7 +107,7 @@ public class SimplePlaceHolderResolver {
                     result.replace(findPrefix, findRelativeSuffix+suffix.length(), mValue);
                     findPrefix = result.indexOf(prefix, findPrefix + mValue.length());
                 } else if(!ignoreUnresolvablePlaceHolder){
-                    AssertUtils.ifTrue(true, () -> "参数value=["+result+"],存在不能解析的placeHolder:["+nestedResolvedPlaceHolder+"]", null);
+                    throw new IllegalArgumentException("参数 value = [" + result + "],存在不能解析的 placeHolder: [" + nestedResolvedPlaceHolder + "]");
                 } else {
                     findPrefix = result.indexOf(prefix, findRelativeSuffix + suffix.length());
                 }
