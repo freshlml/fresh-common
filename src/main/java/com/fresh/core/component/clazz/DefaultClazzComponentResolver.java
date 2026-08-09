@@ -40,11 +40,9 @@ public class DefaultClazzComponentResolver extends AbstractComponentResolver<Cla
 
     @Override
     public List<Class<?>> getAllInterfaces() {
-        List<Class<?>> result = new ArrayList<>();
         List<Component<Class<?>>> children = component.getAllChild();
         Set<Class<?>> setLinked = getAllInterfacesBFS(children);
-        result.addAll(setLinked);
-        return result;
+        return new ArrayList<>(setLinked);
     }
     private Set<Class<?>> getAllInterfacesBFS(List<Component<Class<?>>> children) {
         Set<Class<?>> listResult = new LinkedHashSet<>();
@@ -60,6 +58,5 @@ public class DefaultClazzComponentResolver extends AbstractComponentResolver<Cla
         }
         return listResult;
     }
-
 
 }

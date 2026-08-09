@@ -11,23 +11,25 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 @Slf4j
-public abstract class ClazzUtils {
+public final class ClazzUtils {
+
+    private ClazzUtils() {}
 
     /** 数组后缀 */
     private static final String ARRAYS_SUFFIX = "[]";
-    /** 非 primitive 的 array class 的 name 的前缀 */
+    /** 非 primitive 的 array class 的前缀 */
     private static final String NON_PRIMITIVE_ARRAYS_PREFIX = "[L";
     /** 非 primitive 的 array class 的 name 的后缀 */
     private static final String NON_PRIMITIVE_ARRAYS_SUFFIX = ";";
-    /** 内部类分隔符 */
+    /** binary name 分隔符 */
     private static final String INNER_CLASS_SEP = "$";
-    /** path 分隔符*/
+    /** path 分隔符 */
     private static final String PATH_SEP = "/";
-    /** package 分隔符*/
+    /** package 分隔符 */
     private static final String PACKAGE_SEP = ".";
 
     /**
-     * primitive 缓存
+     * primitive keyword - Class 缓存
      * eg: boolean->boolean.class;
      *     int->int.class; byte->byte.class; short->short.class; long->long.class
      *     char->char.class;
@@ -36,7 +38,7 @@ public abstract class ClazzUtils {
      */
     private static final Map<String, Class<?>> primitiveTypeCache = new HashMap<>(32);
     /**
-     * primitive 与 包装类型 缓存
+     * primitive Class 与包装类型缓存
      * eg: boolean.class->Boolean.class
      *     int.class->Integer.class; byte.class->Byte.class; short.class->Short.class; long.class->Long.class
      *     char.class->Character.class;
@@ -45,7 +47,7 @@ public abstract class ClazzUtils {
      */
     private static final Map<Class<?>, Class<?>> primitive2WrapCache = new HashMap<>(32);
     /**
-     * 包装类型 与 primitive 缓存
+     * 包装类型与 primitive Class 缓存
      * eg: Boolean.class->boolean.class
      *     Integer.class->int.class; Byte.class; Short.class->short.class; Long.class->long.class
      *     Character.class->char.class
@@ -88,7 +90,7 @@ public abstract class ClazzUtils {
     }
 
     /**
-     * thread context ClassLoader; load ClazzUtils's ClassLoader; System ClassLoader; null
+     * thread context ClassLoader; load ClazzUtils's ClassLoader; System ClassLoader
      * @return ClassLoader
      */
     public static ClassLoader getDefaultClassLoader() {
@@ -114,56 +116,56 @@ public abstract class ClazzUtils {
     }
 
     /**
-     * 设置Thread的ClassLoader
-     * @param classLoader ClassLoader
-     * @return thread原来的ClassLoader或者null if not set
+     * Set the specified classLoader, if not null, to current Thread Object.
+     *
+     * @param classLoader ClassLoader, may null
+     * @return the old thread
      */
     public static ClassLoader resetThreadContextClassLoader(ClassLoader classLoader) {
         Thread currentThread = Thread.currentThread();
-        ClassLoader threadClassLoader = currentThread.getContextClassLoader();
-        if(classLoader != null && !classLoader.equals(threadClassLoader)) {//by equals
+        ClassLoader oldClassLoader = currentThread.getContextClassLoader();
+
+        if(classLoader != null && !classLoader.equals(oldClassLoader)) {
             currentThread.setContextClassLoader(classLoader);
-            return threadClassLoader;
         }
-        return null;
+        return oldClassLoader;
     }
 
     /**
-     * enhance Class.forName(...).
-     * 如果是primitive, eg: className=int
-     * 如果是array, eg: className=int[]; className=java.lang.Integer[]; className=com.sc.common.vo.JsonResult[]; className=[Lcom.sc.common.vo.JsonResult;
-     * 如果是declared class,enum,interface,annotation,Class#forName
+     * <p>enhance Class.forName(...). 新增支持 primitive keyword 和新的数组写法，如 int[]，java.lang.Integer[][]，com.sc.common.vo.JsonResult[]。</p>
+     *
+     * <ul>
+     *     <li>declared class, enum, interface, annotation: {@link Class#forName(String, boolean, ClassLoader)}</li>
+     *     <li>array: [Z, [B, [C, [S, [I, [J, [F, [D, [LgetName();: {@link Class#forName(String, boolean, ClassLoader)}</li>
+     *     <li>array 新增：int[]，java.lang.Integer[][]，com.sc.common.vo.JsonResult[]，...</li>
+     *     <li>primitive keyword: int，long，...</li>
+     * </ul>
      *
      * @see Class#forName(String, boolean, ClassLoader)
-     * @see ClazzUtilsTest
-     * @param className className
+     * @param name name
+     * @param initialize initialize
      * @param classLoader ClassLoader
-     * @exception ClassNotFoundException Class#forName的ClassNotFoundException
      * @return Class or null if can not find
      * @throws NullPointerException if the specified clazz is null
+     * @exception ClassNotFoundException if the class cannot be located by the specified class loader
      */
-    public static Class<?> forName(String className, ClassLoader classLoader) throws ClassNotFoundException {
-        Assert.notNull(className, "参数 className 不能为 null");
+    public static Class<?> forName(String name, boolean initialize, ClassLoader classLoader) throws ClassNotFoundException {
+        Assert.notNull(name, "参数 className 不能为 null");
 
-        if(isStringPrimitive(className)) {
-            return resolvePrimitive(className);
+        if(isPrimitiveKeyword(name)) {
+            return resolvePrimitive(name);
         }
-        if(className.endsWith(ARRAYS_SUFFIX)) {
-            String qualifiedComponentClass = className.substring(0, className.length() - ARRAYS_SUFFIX.length());
-            Class<?> componentClass = forName(qualifiedComponentClass, classLoader);
-            return Array.newInstance(componentClass, 0).getClass();
-        }
-        if(className.startsWith(NON_PRIMITIVE_ARRAYS_PREFIX) && className.endsWith(NON_PRIMITIVE_ARRAYS_SUFFIX)) {
-            String qualifiedComponentClass = className.substring(NON_PRIMITIVE_ARRAYS_PREFIX.length(), className.length() - NON_PRIMITIVE_ARRAYS_SUFFIX.length());
-            Class<?> componentClass = forName(qualifiedComponentClass, classLoader);
+        if(name.endsWith(ARRAYS_SUFFIX)) {
+            String qualifiedComponentClass = name.substring(0, name.length() - ARRAYS_SUFFIX.length());
+            Class<?> componentClass = forName(qualifiedComponentClass, initialize, classLoader);
             return Array.newInstance(componentClass, 0).getClass();
         }
 
         ClassLoader classLoaderLocal = Optional.ofNullable(classLoader).orElse(getDefaultClassLoader());
-        return Class.forName(className, true, classLoaderLocal);
+        return Class.forName(name, initialize, classLoaderLocal);
     }
 
-    private static boolean isStringPrimitive(String className) {
+    private static boolean isPrimitiveKeyword(String className) {
         return primitiveTypeCache.containsKey(className);
     }
     private static Class<?> resolvePrimitive(String className) {
@@ -171,16 +173,12 @@ public abstract class ClazzUtils {
     }
 
     /**
-     * enhance Class.isAssignableFrom(...).<br>
-     * {@code Integer.class.isAssignableFrom(int.class)}调用返回false.
-     * {@code int.class.isAssignableFrom(Integer.class)}调用返回false.
-     * 使用如下方法，能够处理上述情况
+     * <p>enhance Class.isAssignableFrom(...). 新增 boxing conversion, unboxing conversion</p>
      *
      * @see Class#isAssignableFrom(Class)
-     * @see ClazzUtilsTest
      * @param left left
      * @param right right
-     * @return whether assignable
+     * @return whether right is assignable to the left
      * @throws NullPointerException if the specified left or right is null
      */
     public static boolean isAssignableFrom(Class<?> left, Class<?> right) {
@@ -191,9 +189,9 @@ public abstract class ClazzUtils {
             return true;
         }
 
-        if(left.isArray() && right.isArray()) {
+        /*if(left.isArray() && right.isArray()) {
             return isAssignableFrom(left.getComponentType(), right.getComponentType());
-        }
+        }*/
 
         if(left.isPrimitive()) {
             Class<?> leftWrapper = primitive2WrapCache.get(left);
@@ -209,13 +207,13 @@ public abstract class ClazzUtils {
 
     /**
      * 继承结构解析树
+     * 如果 clazz 是一个 primitive，返回 ClazzLeaf
+     * 如果 clazz 是一个 array，返回 ClazzComposite, 拥有三个成员(Object，Cloneable，Serializable)
+     * 如果 clazz is null, 返回 null
+     *
      * @see Component
-     * 如果clazz是一个primitive，返回ClazzLeaf，封装此primitive的Class
-     * 如果clazz是一个array，返回ClazzComponent,封装此array的Class，默认返回拥有三个成员(Object，Cloneable，Serializable)
-     * 如果clazz is null, 返回null
      * @see Class#getSuperclass()
      * @see Class#getInterfaces()
-     * @see ClazzUtilsTest
      * @param clazz class
      * @return 树
      */
@@ -225,18 +223,17 @@ public abstract class ClazzUtils {
         Class<?> superClazz = clazz.getSuperclass();
         Class<?>[] superInterfaces = clazz.getInterfaces();
 
-        Composite result;
-        if(superClazz==null && superInterfaces.length==0) {
+        if(superClazz == null && superInterfaces.length == 0)
             return new ClazzLeaf(clazz);
-        } else {
-            result = new ClazzComposite(clazz);
-        }
 
-        Component superClazzComponent = clazzTree(superClazz);
+        Composite<Class<?>> result = new ClazzComposite(clazz);
+
+        Component<Class<?>> superClazzComponent = clazzTree(superClazz);
         if(superClazzComponent != null)
             result.addChild(superClazzComponent);
+
         for(Class<?> superInterface : superInterfaces) {
-            Component superInterfaceComponent = clazzTree(superInterface);
+            Component<Class<?>> superInterfaceComponent = clazzTree(superInterface);
             result.addChild(superInterfaceComponent);
         }
 
@@ -244,15 +241,14 @@ public abstract class ClazzUtils {
     }
 
 
-
     /**
-     * 获取clazz的所有基类
-     * 如果clazz是一个declared class,enum，返回其所有基类
-     * 如果clazz是一个interface,annotation,primitive,返回empty list
-     * 如果clazz是一个array, 返回List[Object.class]
-     * 如果clazz is null, 返回empty list
+     * 获取 clazz 的所有基类
+     * 如果 clazz 是一个 declared class, enum，返回其所有基类
+     * 如果 clazz 是一个 interface, annotation, primitive, 返回 empty list
+     * 如果 clazz 是一个 array, 返回 List[Object.class]
+     * 如果 clazz is null, 返回 empty list
      * @param clazz class
-     * @return clazz的所有基类
+     * @return clazz 的所有基类
      */
     public static List<Class<?>> getAllSuperClass(Class<?> clazz) {
         Component<Class<?>> component = clazzTree(clazz);
@@ -260,9 +256,9 @@ public abstract class ClazzUtils {
     }
 
     /**
-     * 获取clazz的所有基类
+     * 获取 clazz 的所有基类
      * @param component empty list if component is null
-     * @return clazz的所有基类
+     * @return clazz 的所有基类
      */
     public static List<Class<?>> getAllSuperClass(Component<Class<?>> component) {
         if(component == null) return new ArrayList<>();
@@ -271,12 +267,12 @@ public abstract class ClazzUtils {
     }
 
     /**
-     * 获取clazz的所有基接口
-     * 如果clazz是一个declared class,interface,annotation,返回其所有基接口
-     * 如果clazz是一个enum,primitive,返回empty list
-     * 如果clazz是一个array,返回List[Cloneable.class,Serializable.class]
+     * 获取 clazz 的所有基接口
+     * 如果 clazz 是一个 declared class, interface, annotation 返回其所有基接口
+     * 如果 clazz 是一个 enum, primitive 返回 empty list
+     * 如果 clazz 是一个 array 返回 List[Cloneable.class,Serializable.class]
      * @param clazz class
-     * @return clazz的所有基接口
+     * @return clazz 的所有基接口
      */
     public static List<Class<?>> getAllInterfaces(Class<?> clazz) {
         Component<Class<?>> component = clazzTree(clazz);
@@ -284,9 +280,9 @@ public abstract class ClazzUtils {
     }
 
     /**
-     * 获取clazz的所有基接口
+     * 获取 clazz 的所有基接口
      * @param component empty list if component is null
-     * @return clazz的所有基类
+     * @return clazz 的所有基类
      */
     public static List<Class<?>> getAllInterfaces(Component<Class<?>> component) {
         if(component == null) return new ArrayList<>();

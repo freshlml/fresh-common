@@ -11,11 +11,13 @@ import java.util.List;
 /**
  * test for ClazzUtils
  */
-public class ClazzUtilsTest {
+public final class ClazzUtilsTest {
 
-    public static void main(String argv[]) throws Exception {
+    private ClazzUtilsTest() {}
 
-        testForName();
+    public static void main(String[] argv) throws Exception {
+
+        forName_test();
 
         testIsAssignableFrom();
 
@@ -24,53 +26,55 @@ public class ClazzUtilsTest {
     }
 
 
-    public static void testForName() throws Exception {
-        Class<?> intClass = ClazzUtils.forName("int", null);
+    public static void forName_test() throws Exception {
+        System.out.println(ClazzUtils.forName("com.fresh.core.utils.ClazzUtilsTest", true, null));
+
+        System.out.println(ClazzUtils.forName("[I", true, null));
+        System.out.println(ClazzUtils.forName("[[I", true, null));
+        System.out.println(ClazzUtils.forName("[Lcom.fresh.core.utils.ClazzUtilsTest;", true, null));
+        System.out.println(ClazzUtils.forName("[[Lcom.fresh.core.utils.ClazzUtilsTest;", true, null));
+
+        Class<?> intClass = ClazzUtils.forName("int", true, null);
         System.out.println("int: " + intClass);
         System.out.println("int.class == intClass: " + (intClass == int.class));
-        Class<?> intArrayClass = ClazzUtils.forName("int[]", null);
-        System.out.println("int[]: " + intArrayClass);
-        System.out.println("int[].class == intArrayClass: " + (intArrayClass==int[].class));
-        Class<?> objArray1 = ClazzUtils.forName("[Lcom.fresh.common.result.JsonResult;", null);
-        System.out.println("objArray1: " + objArray1);
-        System.out.println("obj[].class ==  objArray1: " + (objArray1 == JsonResult[].class));
-        Class<?> objArray2 = ClazzUtils.forName("com.fresh.common.result.JsonResult[]", null);
-        System.out.println("objArray2: " + objArray2);
-        System.out.println("obj[].class ==  objArray2: " + (objArray1 == JsonResult[].class));
-        Class<?> clazz = ClazzUtils.forName("com.fresh.common.utils.TestForInnerClazz", null);
-        System.out.println(clazz);
-        Class<?> innerClazz = ClazzUtils.forName("com.fresh.common.utils.TestForInnerClazz$PubStaticInnerClazz", null);
-        System.out.println(innerClazz);
 
-        System.out.println("---------------------testForName---------------------");
+        Class<?> intArrayClass = ClazzUtils.forName("int[]", true, null);
+        System.out.println("int[]: " + intArrayClass);
+        System.out.println("int[].class == intArrayClass: " + (intArrayClass == int[].class));
+
+        Class<?> objArrayClass = ClazzUtils.forName("com.fresh.core.utils.ClazzUtilsTest[]", true, null);
+        System.out.println("objArrayClass: " + objArrayClass);
+
+        Class<?> clazz = ClazzUtils.forName("com.fresh.core.utils.ClazzUtilsTest[][]", true, null);
+        System.out.println(clazz);
+
+        System.out.println("---------------------forName_test---------------------");
     }
 
 
     private static void testIsAssignableFrom() {
         //primitive
-        System.out.println("int.class assignableFrom int.class: " + int.class.isAssignableFrom(int.class));
-        System.out.println("int.class assignableFrom Integer.class: " + int.class.isAssignableFrom(Integer.class));
-        System.out.println("Integer.class assignableFrom int.class: " + Integer.class.isAssignableFrom(int.class));
+        System.out.println(long.class.isAssignableFrom(int.class));     //false
+        System.out.println(Integer.class.isAssignableFrom(int.class));  //false
+        System.out.println(int.class.isAssignableFrom(Integer.class));  //false
 
-        System.out.println(ClazzUtils.isAssignableFrom(int.class, Integer.class));
-        System.out.println(ClazzUtils.isAssignableFrom(Integer.class, int.class));
+        System.out.println(ClazzUtils.isAssignableFrom(long.class, int.class));  //false
+        System.out.println(ClazzUtils.isAssignableFrom(int.class, Integer.class));  //true
+        System.out.println(ClazzUtils.isAssignableFrom(Integer.class, int.class));  //true
 
+        //primitive array
+        System.out.println(int[].class.isAssignableFrom(int[].class));           //true
+        System.out.println(long[].class.isAssignableFrom(int[].class));          //false
+        System.out.println(Integer[].class.isAssignableFrom(int[].class));       //false
+        System.out.println(int[].class.isAssignableFrom(Integer[].class));       //false
 
-        //array(primitive)
-        System.out.println("int[] assignableFrom int[]: " + int[].class.isAssignableFrom(int[].class));
-        System.out.println("Integer[] assignableFrom int[]: " + Integer[].class.isAssignableFrom(int[].class));
-        System.out.println("int[] assignableFrom Integer[]: " + int[].class.isAssignableFrom(Integer[].class));
-        System.out.println("Integer[][][] assignableFrom Integer[][][]: " + Integer[][][].class.isAssignableFrom(Integer[][][].class));
-
-        System.out.println(ClazzUtils.isAssignableFrom(int[].class, int[].class));
-        System.out.println(ClazzUtils.isAssignableFrom(int[].class, Integer[].class));
-        System.out.println(ClazzUtils.isAssignableFrom(Integer[].class, int[].class));
-        System.out.println(ClazzUtils.isAssignableFrom(Integer[][][].class, int[][][].class));
-        System.out.println(ClazzUtils.isAssignableFrom(Integer[][].class, int[][][].class));
+        System.out.println(ClazzUtils.isAssignableFrom(int[].class, int[].class));      //true
+        System.out.println(ClazzUtils.isAssignableFrom(long[].class, int[].class));     //false
+        System.out.println(ClazzUtils.isAssignableFrom(int[].class, Integer[].class));  //false    去掉注释 true
+        System.out.println(ClazzUtils.isAssignableFrom(Integer[].class, int[].class));  //false    去掉注释 true
 
         System.out.println("---------------------testIsAssignableFrom---------------------");
     }
-
 
 
     private static void testClazzTree() {
@@ -106,10 +110,10 @@ public class ClazzUtilsTest {
     public interface C2 {}
     public interface C1 extends C2 {}
     public static class B213 {}
-    public static class B21 extends B213{}
-    public interface B223{}
+    public static class B21 extends B213 {}
+    public interface B223 {}
     public interface B22 extends B223 {}
-    public static class B1 extends B21 implements B22{}
+    public static class B1 extends B21 implements B22 {}
     public class A extends B1 implements C1, D1 {}
 
 }
