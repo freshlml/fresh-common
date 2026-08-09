@@ -6,7 +6,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class NumberUnitUtilsTest {
+public final class NumberUnitUtilsTest {
+
+    private NumberUnitUtilsTest() {}
 
     public static void main(String[] argv) {
 

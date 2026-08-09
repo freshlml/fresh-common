@@ -47,7 +47,7 @@ public class BizException extends RuntimeException {
     }
 
     public String getExceptionCodeWith(String code) {
-        if(exceptionCodeSupplier==null || StringUtils.isEmpty(exceptionCodeSupplier.get())) {
+        if(exceptionCodeSupplier == null || exceptionCodeSupplier.get() == null || exceptionCodeSupplier.get().isEmpty()) {
             return Optional.ofNullable(code).orElse(JsonResultEnum.FAIL.getCode());
         }
         return exceptionCodeSupplier.get();
