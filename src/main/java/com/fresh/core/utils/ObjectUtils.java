@@ -3,7 +3,9 @@ package com.fresh.core.utils;
 
 import java.util.Arrays;
 
-public abstract class ObjectUtils {
+public final class ObjectUtils {
+
+    private ObjectUtils() {}
 
     private static final int INITIAL_HASH = 7;
     private static final int MULTIPLIER = 31;
@@ -28,8 +30,6 @@ public abstract class ObjectUtils {
      * @return true if the two specified object is equal
      */
     public static boolean objEquals(Object o1, Object o2) {
-        /*if(Objects.equals(o1, o2)) return true;
-        return arrayEquals(o1, o2);*/
         if(o1 == o2) return true;  //note: null == null is true
         if(o1 == null || o2 == null) return false;
         if(o1.equals(o2)) return true;
@@ -211,7 +211,6 @@ public abstract class ObjectUtils {
     }
 
 
-
     public static String objToString(Object obj) {
         if (obj == null) {
             return NULL_STRING;
@@ -249,9 +248,5 @@ public abstract class ObjectUtils {
         String str = obj.toString();
         return (str != null ? str : EMPTY_STRING);
     }
-
-
-
-
 
 }
