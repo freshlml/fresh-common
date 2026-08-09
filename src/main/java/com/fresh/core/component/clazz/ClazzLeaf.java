@@ -3,7 +3,7 @@ package com.fresh.core.component.clazz;
 import com.fresh.core.component.Leaf;
 
 /**
- * Class类型的叶子节点
+ * Class 类型的叶子节点
  */
 public class ClazzLeaf extends Leaf<Class<?>> {
 

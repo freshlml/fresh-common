@@ -1,7 +1,7 @@
 package com.fresh.core.component;
 
 import com.fresh.core.component.clazz.ClazzComposite;
-import com.fresh.core.utils.AssertUtils;
+import com.fresh.core.utils.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +25,13 @@ public class Composite<T> extends AbstractComponent<T> {
         return composites;
     }
 
+    /**
+     * @param child 节点，不应该为null
+     * @throws NullPointerException if child is null
+     */
     @Override
     public void addChild(Component<T> child) {
-        AssertUtils.notNull(child, "参数child不能为null");
+        Assert.notNull(child, "参数 child 不能为空");
         this.composites.add(child);
     }
 

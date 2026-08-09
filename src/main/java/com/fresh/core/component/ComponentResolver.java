@@ -5,11 +5,11 @@ import com.fresh.core.component.clazz.ClazzComponentResolver;
 import java.util.List;
 
 /**
- * Component解析器
+ * Component 解析器
  * @see Component
  * @see AbstractComponentResolver
  * @see ClazzComponentResolver
- * @param <T> Component的泛型类型
+ * @param <T> Component 的泛型类型
  */
 public interface ComponentResolver<T> {
 

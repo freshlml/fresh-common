@@ -5,20 +5,20 @@ import com.fresh.core.component.ComponentResolver;
 import java.util.List;
 
 /**
- * Class类型的Component解析器
+ * Class 类型的 Component 解析器
  * @see DefaultClazzComponentResolver
  */
 public interface ClazzComponentResolver extends ComponentResolver<Class<?>> {
 
     /**
-     * 获取clazz的所有super class
-     * @return 所有super class
+     * 获取 clazz 的所有 super class
+     * @return 所有 super class
      */
     List<Class<?>> getAllSuperClass();
 
     /**
-     * 获取clazz的所有interfaces
-     * @return 所有interfaces
+     * 获取 clazz 的所有 interfaces
+     * @return 所有 interfaces
      */
     List<Class<?>> getAllInterfaces();
 

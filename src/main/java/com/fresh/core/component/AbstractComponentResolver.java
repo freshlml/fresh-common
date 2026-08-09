@@ -20,7 +20,7 @@ public abstract class AbstractComponentResolver<T> implements ComponentResolver<
 
     @Override
     public boolean isLeaf() {
-        return component.getAllChild()==null || component.getAllChild().size()==0;
+        return component.getAllChild() == null || component.getAllChild().isEmpty();
     }
 
     @Override

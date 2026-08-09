@@ -6,7 +6,7 @@ import com.fresh.core.component.Component;
 import java.util.*;
 
 /**
- * ClazzComponentResolver的默认实现
+ * ClazzComponentResolver 的默认实现
  */
 public class DefaultClazzComponentResolver extends AbstractComponentResolver<Class<?>>
                                            implements ClazzComponentResolver {
@@ -17,13 +17,13 @@ public class DefaultClazzComponentResolver extends AbstractComponentResolver<Cla
 
 
 //
-// 实现ClazzComponentResolver
+// 实现 ClazzComponentResolver
 //
     @Override
     public List<Class<?>> getAllSuperClass() {
         List<Class<?>> result = new ArrayList<>();
-        List<Component<Class<?>>> childs = component.getAllChild();
-        getAllSuperClass(result, childs);
+        List<Component<Class<?>>> children = component.getAllChild();
+        getAllSuperClass(result, children);
         return result;
     }
 
@@ -41,15 +41,15 @@ public class DefaultClazzComponentResolver extends AbstractComponentResolver<Cla
     @Override
     public List<Class<?>> getAllInterfaces() {
         List<Class<?>> result = new ArrayList<>();
-        List<Component<Class<?>>> childs = component.getAllChild();
-        Set<Class<?>> setLinked = getAllInterfacesBFS(childs);
+        List<Component<Class<?>>> children = component.getAllChild();
+        Set<Class<?>> setLinked = getAllInterfacesBFS(children);
         result.addAll(setLinked);
         return result;
     }
-    private Set<Class<?>> getAllInterfacesBFS(List<Component<Class<?>>> childs) {
+    private Set<Class<?>> getAllInterfacesBFS(List<Component<Class<?>>> children) {
         Set<Class<?>> listResult = new LinkedHashSet<>();
         Queue<Component<Class<?>>> queueList = new LinkedList<>();
-        childs.forEach(queueList::offer);
+        children.forEach(queueList::offer);
         while(!queueList.isEmpty()) {
             Component<Class<?>> currentNode = queueList.poll();
             Class<?> entity = currentNode.getEntity();

@@ -18,14 +18,14 @@ public interface Component<T> {
     T getEntity();
 
     /**
-     * 获取所有子节点,如果没有子节点，返回empty list
+     * 获取所有子节点, 如果没有子节点，返回 empty list
      * @return all child
      */
     List<Component<T>> getAllChild();
 
     /**
      * 增加子节点
-     * @param child 节点，不应该为null
+     * @param child 节点，不应该为 null
      */
     void addChild(Component<T> child);
 
