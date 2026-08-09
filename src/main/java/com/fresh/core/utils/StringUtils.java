@@ -1,6 +1,8 @@
 package com.fresh.core.utils;
 
-public abstract class StringUtils {
+public final class StringUtils {
+
+    private StringUtils() {}
 
     /**路径分隔符*/
     private static final String PATH_SEP = "/";
@@ -10,31 +12,47 @@ public abstract class StringUtils {
     /**类文件后缀*/
     private static final String CLASS_SUFFIX = "class";
 
-
     /**
-     * 将className 转化为 classpath
-     * eg:
-     *     com.sc.common.vo.JsonResult   ->  com/sc/common/vo/JsonResult.class
-     *     com.sc.common.vo              ->  com/sc/common/vo
-     * @param className 包名 或者 类的qualified name
-     * @param suffix 是否添加.class后缀
+     * 将 binary name（top level type） 转化为 classpath
+     * <ul>
+     *     <li>
+     *         top level type: packageName.typeName  ->  packageName/typeName
+     *     </li>
+     *     <li>
+     *         member type: enclosing type + '$' + typeName
+     *     </li>
+     *     <li>
+     *         local class: enclosing type + '$' + non-empty sequence of digits + typeName
+     *     </li>
+     *     <li>
+     *         anonymous class: enclosing type + '$' + non-empty sequence of digits
+     *     </li>
+     *     <li>
+     *         Type Variable: enclosing type + '$' + typeName
+     *     </li>
+     *     <li>...</li>
+     * </ul>
+     *
+     * @param classname binary name
+     * @param suffix true-添加 ".class" 后缀
      * @return classpath for ClassLoader#getResource(String)
      */
-    public static String className2classpath(String className, boolean suffix) {
-        if(!hasLength(className)) return className;
+    public static String className2classpath(String classname, boolean suffix) {
+        if(!hasLength(classname)) return classname;
 
-        String classpath = className.replace(PACKAGE_SEP, PATH_SEP);
-        if(suffix) classpath += PACKAGE_SEP + CLASS_SUFFIX;
+        String classpath = classname.replace(PACKAGE_SEP, PATH_SEP);
+        if(suffix)
+            classpath += PACKAGE_SEP + CLASS_SUFFIX;
         return classpath;
     }
 
     /**
-     * 将classpath 转化为 className
+     * 将 classpath 转化为 className
      * eg:
      *      com/sc/common/vo/JsonResult.class  ->  com.sc.common.vo.JsonResult
      *      com/sc/common/vo                   ->  com.sc.common.vo
      * @param classpath classpath
-     * @return className包名 或者 类的qualified name
+     * @return className
      */
     public static String classpath2ClassName(String classpath) {
         if(!hasLength(classpath)) return classpath;
@@ -42,6 +60,7 @@ public abstract class StringUtils {
         while(classpath.startsWith("/")) {
             classpath = classpath.substring(1);
         }
+
         if(classpath.endsWith(PACKAGE_SEP + CLASS_SUFFIX)) {
             classpath = classpath.substring(0, classpath.length()-(PACKAGE_SEP + CLASS_SUFFIX).length());
         }
@@ -49,11 +68,11 @@ public abstract class StringUtils {
     }
 
     /*
-     * 是否是16进制
+     * 是否是 16 进制
      */
     public static boolean isHexNumber(String str) {
         if(str == null) return false;
-        int index = (str.startsWith("-") ? 1 : 0);
+        int index = (str.startsWith("-") || str.startsWith("+") ? 1 : 0);
         return (str.startsWith("0x", index) || str.startsWith("0X", index) || str.startsWith("#", index));
     }
 
@@ -63,11 +82,16 @@ public abstract class StringUtils {
      * @return true of false
      */
     public static boolean hasLength(String str) {
-        return str != null && str.length() > 0;
+        return str != null && !str.isEmpty();
     }
 
-    /*
-     * 去除所有whitespace
+    /**
+     * <p>Remove all whitespace according to Character#isWhitespace(char).</p>
+     *
+     * <p>无需处理高位代理和低位代理，因为码点值大于 65535 的 unicode 字符不存在 whitespace.</p>
+     *
+     * @param str the specified string
+     * @return string with all whitespace removed
      */
     public static String trimAllWhitespace(String str) {
         if (str == null || str.isEmpty()) {
@@ -83,18 +107,5 @@ public abstract class StringUtils {
         }
         return sb.toString();
     }
-
-
-    /*
-     * Check whether the given object (possibly a {@code String}) is empty.
-     * <p>This method accepts any Object as an argument, comparing it to
-     * {@code null} and the empty String. As a consequence, this method
-     * will never return {@code true} for a non-null non-String object.
-     * <p>The Object signature is useful for general attribute handling code
-     * that commonly deals with Strings but generally has to iterate over
-     * Objects since attributes may e.g. be primitive value objects as well.
-     */
-    public static boolean isEmpty(Object str) {
-        return (str == null || "".equals(str));
-    }
+    
 }
