@@ -3,8 +3,7 @@ package com.fresh.core.placeholder;
 import com.fresh.core.utils.Assert;
 
 /**
- * PlaceHolder解析器，对给定的String,解析替换其中的placeholder
- * eg: {@link SimplePlaceHolderResolverTest}
+ * PlaceHolder 解析器，对给定的 String, 解析替换其中的 placeholder
  */
 public class SimplePlaceHolderResolver {
 
@@ -26,14 +25,14 @@ public class SimplePlaceHolderResolver {
     private final String valueSeparator;
     /**
      * PlaceHolder不能解析时，是否忽略
-     * default true, will原样返回
-     * if false: were throw exception
+     * default true: 原样返回
+     * false: throw exception
      */
     private final Boolean ignoreUnresolvablePlaceHolder;
 
     /**
-     * 默认构造SimplePlaceHolderResolver
-     *with prefix="${" ; suffix="}" ; valueSeparator=":" ; ignoreUnresolvablePlaceHolder=true
+     * 默认构造 SimplePlaceHolderResolver
+     * with prefix = "${" ; suffix = "}" ; valueSeparator = ":" ; ignoreUnresolvablePlaceHolder=true
      */
     public SimplePlaceHolderResolver() {
         this(DEFAULT_PREFIX, DEFAULT_SUFFIX, DEFAULT_VALUE_SEPARATOR, true);
@@ -41,10 +40,10 @@ public class SimplePlaceHolderResolver {
 
     /**
      *
-     * @param prefix  前缀，如果为null，将使用DEFAULT_PREFIX
-     * @param suffix   后缀，如果为null，将使用DEFAULT_SUFFIX
-     * @param valueSeparator PlaceHolder 分隔符，如果为null，将使用DEFAULT_VALUE_SEPARATOR
-     * @param ignoreUnresolvablePlaceHolder  PlaceHolder不能解析时，是否忽略，默认true
+     * @param prefix  前缀，如果为 null，将使用 DEFAULT_PREFIX
+     * @param suffix   后缀，如果为 null，将使用 DEFAULT_SUFFIX
+     * @param valueSeparator PlaceHolder 分隔符，如果为 null，将使用 DEFAULT_VALUE_SEPARATOR
+     * @param ignoreUnresolvablePlaceHolder  PlaceHolder不能解析时，是否忽略，默认 true
      */
     public SimplePlaceHolderResolver(String prefix, String suffix, String valueSeparator,
                                      Boolean ignoreUnresolvablePlaceHolder) {
@@ -81,22 +80,25 @@ public class SimplePlaceHolderResolver {
 
         while(findPrefix != -1) {
             int findRelativeSuffix = findRelativeSuffix(result, findPrefix);
+
             if(findRelativeSuffix != -1) {
                 String placeHolder = result.substring(findPrefix + prefix.length(), findRelativeSuffix);
 
                 String nestedResolvedPlaceHolder = resolve(placeHolder, placeHolderSourceValueResolver);
 
                 int valueSeparatorIndex = nestedResolvedPlaceHolder.indexOf(valueSeparator);
-                String placeHolderValue = null;
+                String placeHolderValue;
                 if(valueSeparatorIndex == -1) {
                    placeHolderValue = placeHolderSourceValueResolver.sourceValue(nestedResolvedPlaceHolder);
                 } else {
                     String nPlaceHolder = nestedResolvedPlaceHolder.substring(0, valueSeparatorIndex);
                     String defaultValue = nestedResolvedPlaceHolder.substring(valueSeparatorIndex + valueSeparator.length());
+
                     String nValue = placeHolderSourceValueResolver.sourceValue(nPlaceHolder);
+
                     if(nValue != null) {
                         placeHolderValue = nValue;
-                    } else if(defaultValue==null || "".equals(defaultValue.trim()) || "null".equalsIgnoreCase(defaultValue.trim())) {
+                    } else if(defaultValue.trim().isEmpty() || "null".equalsIgnoreCase(defaultValue.trim())) {
                         placeHolderValue = null;
                     } else {
                         placeHolderValue = defaultValue;
@@ -104,7 +106,7 @@ public class SimplePlaceHolderResolver {
                 }
                 if(placeHolderValue != null) {
                     String mValue = resolve(placeHolderValue, placeHolderSourceValueResolver);
-                    result.replace(findPrefix, findRelativeSuffix+suffix.length(), mValue);
+                    result.replace(findPrefix, findRelativeSuffix + suffix.length(), mValue);
                     findPrefix = result.indexOf(prefix, findPrefix + mValue.length());
                 } else if(!ignoreUnresolvablePlaceHolder){
                     throw new IllegalArgumentException("参数 value = [" + result + "],存在不能解析的 placeHolder: [" + nestedResolvedPlaceHolder + "]");
@@ -112,7 +114,8 @@ public class SimplePlaceHolderResolver {
                     findPrefix = result.indexOf(prefix, findRelativeSuffix + suffix.length());
                 }
             } else {
-                break;
+                //break;
+                findPrefix = result.indexOf(prefix, findPrefix + prefix.length());
             }
         }
 
@@ -122,9 +125,11 @@ public class SimplePlaceHolderResolver {
     protected int findRelativeSuffix(StringBuilder value, int prefixStart) {
         int findPos = prefixStart + prefix.length();
         int predit = 1;
-        while(predit != 0 && findPos<value.length()) {
+
+        while(predit != 0 && findPos < value.length()) {
             int nextPrefixPos = value.indexOf(prefix, findPos);
             int nextSuffixPos = value.indexOf(suffix, findPos);
+
             if(nextSuffixPos == -1) {
                 break;
             } else if(nextPrefixPos == -1){
