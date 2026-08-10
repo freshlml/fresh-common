@@ -4,10 +4,11 @@ package com.fresh.core.utils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-public class ReflectUtilsTest {
+public final class ReflectUtilsTest {
 
-    public static void main(String argv[]) throws Exception {
+    private ReflectUtilsTest() {}
 
+    public static void main(String[] argv) throws Exception {
 
         testFindFieldSemantics();
 

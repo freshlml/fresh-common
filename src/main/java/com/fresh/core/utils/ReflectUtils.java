@@ -6,34 +6,46 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public abstract class ReflectUtils {
+public final class ReflectUtils {
 
+    private ReflectUtils() {}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Constructor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     * packing Class.getConstructor {@link Class#getConstructor(Class[])}, 获取public构造器.
-     * if Class#getConstructor 触发 NoSuchMethodException return null
-     * if Class#getConstructor 触发 SecurityException 原样抛出
+     * <p>封装 {@link Class#getConstructor(Class[])} </p>
      *
-     * clazz参数不能为null，如不传paramTypes或者paramTypes=null或者传递empty Class<?>[]，表示获取无参构造器
+     * <p>查找 public 构造器。当 Class#getConstructor 抛出 NoSuchMethodException 时，return null.</p>
      *
-     * 如果Class Object是成员内部类，局部内部类和匿名内部类，paramTypes第一个参数是其enclosing instance
+     * <p>If this Class object represents an inner class declared in a non-static context, the
+     * formal parameter types include the explicit enclosing instance as the first parameter.</p>
      *
-     * 带泛型信息的参数传递方法:
-     * 如果Class Object的构造器参数是TypeVariable,eg: class Leaf<T> { public Leaf(T t){} } ;则paramTypes=Class<?>[]{Object.class} (泛型擦除)
-     *                                        eg: class Loop { public <T extends Number> Loop(T t){} } ;则paramTypes=Class<?>[]{Number.class} (泛型擦除，向上转型)
+     * <p>声明时：编译时类型。getConstructor 方法参数传递：使用运行时类型</p>
+     * <ul>
+     *     <li>如果 Class Object 的构造器参数是 TypeVariable
+     *         <ul>
+     *             <li>class Leaf<T> { Leaf(T t){} } ; 则 paramTypes = Class<?>[]{ Object.class } (类型擦除)</li>
+     *             <li>class Loop { <T extends Number> Loop(T t){} } ; 则 paramTypes = Class<?>[]{ Number.class } (类型擦除)</li>
+     *         </ul>
+     *     </li>
+     *     <li>如果 Class Object 的构造器参数是 GenericArrayType
+     *         <ul>
+     *             <li>class Loop { <T> Loop(T[] t){} } ; 则 paramTypes = Class<?>[]{ Object[].class } (类型擦除)</li>
+     *             <li>class Loop { <T> Loop(List<T>[] t){} } ; 则 paramTypes = Class<?>[]{ List[].class } (类型擦除)</li>
+     *         </ul>
+     *     </li>
+     *     <li>如果 Class Object 的构造器参数是 ParameterizedType
+     *         <ul>
+     *             <li>class Loop { <T> Loop(Loop<T> lt) } ; 则 paramTypes = Class<?>[]{ Loop.class } (类型擦除)</li>
+     *         </ul>
+     *     </li>
+     * </ul>
      *
-     * 如果Class Object的构造器参数是GenericArrayType,eg: class Loop { public <T> Loop(T[] t){} } ;则paramTypes=Class<?>[]{Object[].class} (泛型变量数组)
-     *                                             eg: class Loop { public <T> Loop(List<T>[] t){} } ;则paramTypes=Class<?>[]{List[].class} (泛型类型数组)
-     *
-     * 如果Class Object的构造器参数是ParameterizedType.eg: class Loop { public <T> Loop(Loop<T> lt) } ;则paramTypes=Class<?>[]{Loop.class}
-     *
-     * @param clazz class
-     * @param paramTypes 参数
+     * @param clazz class, not null
+     * @param paramTypes 参数列表，如果不传 paramTypes 或者传 null 或者传 empty array，表示获取无参构造器
      * @return Constructor or null
-     * @throws SecurityException propagates Class#getConstructor的SecurityException
+     * @throws SecurityException propagates the SecurityException of Class#getConstructor(...)
      * @throws NullPointerException if the specified clazz is null
      */
     public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... paramTypes) throws SecurityException {
@@ -48,19 +60,17 @@ public abstract class ReflectUtils {
 
 
     /**
-     * packing Class.getDeclaredConstructor {@link Class#getDeclaredConstructor(Class[])}, 查找Class Object的public protected package private constructor,
-     * 并且setAccessible(true) if require
-     * if Class#getDeclaredConstructor 触发 NoSuchMethodException return null
-     * if Class#getDeclaredConstructor 触发 SecurityException 直接抛出
+     * <p>封装 {@link Class#getDeclaredConstructor(Class[])}</p>
      *
-     * clazz参数不能为null，如不传paramTypes或者paramTypes=null或者传递empty Class<?>[]，表示获取无参构造器
+     * <p>查找 public、protected、package、private 构造器。当 Class#getConstructor 抛出 NoSuchMethodException 时，return null.</p>
      *
-     * 如果Class Object是成员内部类，局部内部类和匿名内部类，paramTypes第一个参数是其enclosing instance
+     * <p>If this Class object represents an inner class declared in a non-static context, the
+     * formal parameter types include the explicit enclosing instance as the first parameter.</p>
      *
-     * @param clazz class
-     * @param paramTypes 参数
+     * @param clazz class, not null
+     * @param paramTypes 参数列表，如果不传 paramTypes 或者传 null 或者传 empty array，表示获取无参构造器
      * @return Constructor or null
-     * @throws SecurityException propagates Class#getDeclaredConstructor的SecurityException
+     * @throws SecurityException propagates the SecurityException of Class#getDeclaredConstructor(...)
      * @throws NullPointerException if the specified clazz is null
      */
     public static <T> Constructor<T> getDeclaredConstructor(Class<T> clazz, Class<?>... paramTypes) throws SecurityException {
@@ -77,18 +87,22 @@ public abstract class ReflectUtils {
 
 
     /**
-     * packing Constructor#newInstance {@link Constructor#newInstance(Object...)}, 构造实例对象
+     * <p>封装 {@link Constructor#newInstance(Object...)}</p>
      *
-     * 如果此Constructor的declaring class是局部内部类，匿名内部类，成员内部类，第一参数是其declaring class的enclosing instance
+     * <p>构造实例对象</p>
+     *
+     * <p>If the constructor's declaring class is an inner class in a non-static
+     * context, the first argument to the constructor needs to be the enclosing instance</p>
      *
      * @param constructor 构造器
-     * @param initargs 构造器参数
+     * @param initargs 构造器参数，如果不传或者传 null 或者传 empty array，表示无参构造器
      * @param <T> 泛型参数
      * @return 实例对象
      * @throws InstantiationException       实例化失败，如构造器的declaring class is abstract等问题
      * @throws InvocationTargetException    构造器执行抛出的异常，封装成InvocationTargetException抛出
      * @throws IllegalArgumentException     参数数量不匹配，类型不匹配等参数问题
      * @throws NullPointerException         if the specified constructor is null
+     * @throws ExceptionInInitializerError  if the initialization provoked by this method fails
      */
     public static <T> T newInstance(Constructor<T> constructor, Object ... initargs)
             throws InstantiationException, InvocationTargetException, IllegalArgumentException, IllegalAccessException {
@@ -115,34 +129,47 @@ public abstract class ReflectUtils {
 //Method
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     * packing Class.getMethod, {@link Class#getMethod}, 查找public method，任何接口中的static方法不在查找范围中
-     * Class.getMethod查找逻辑: 先根深度优先
-     * 1.在Class Object中查找，如果找不到，进行第2步
-     * 2.在superclass中递归，如果找不到，进行第3步
-     * 3.在superinterface中递归，如果找不到，throw NoSuchMethodException
+     * <p>封装 {@link Class#getMethod}</p>
      *
-     * 如果Clazz是Object的子类，能够查找到Object中toString，hashCode，wait，notify，getClass；查找不到Object中equals, clone, finalize
+     * <p>查找 public method, 任何接口中的 static 方法不在查找范围中。如果 Class.getMethod 触发 NoSuchMethodException, return null</p>
      *
-     * 如果存在相同签名的桥接方法,bridged method的返回值将more specific，返回more specific的；如果存在桥接方法但参数类型不同，根据参数类型即可区分
+     * <p>查找逻辑: 先根深度优先</p>
      *
-     * if Class.getMethod 触发 NoSuchMethodException return null
-     * if Class.getMethod 触发 SecurityException  原样返回
+     * <ol>
+     *     <li>在 Class Object 中查找，如果找不到，进行第 2 步</li>
+     *     <li>在 superclass 中递归，如果找不到，进行第 3 步</li>
+     *     <li>在 superinterface 中递归，如果找不到，throw NoSuchMethodException</li>
+     * </ol>
      *
-     * paramTypes不传，或者paramTypes=null,表示获取无参方法
+     * <p>If more than one such method is found in C, and one of these methods has a return type that is more specific than any of the others, that method is reflected;
+     * otherwise one of the methods is chosen arbitrarily. Note that JVM could declare multiple methods with the same signature(bridge method)</p>
      *
-     * 带泛型信息的参数传递方法:
-     * 如果Class Object的参数是TypeVariable,eg: genericTT(T t),则paramTypes=Class<?>[]{Object.class}
-     *
-     * 如果Class Object的参数是GenericArrayType,eg genericTT(T[], List<T>[]),则paramTypes=Class<?>[]{Object[].class, List[].class}
-     *
-     * 如果Class Object的参数是ParameterizedType,eg generic(Loop<T>),则paramTypes=Class<?>[]{Loop.class}
-     *
+     * <p>声明时：编译时类型。getConstructor 方法参数传递：使用运行时类型</p>
+     * <ul>
+     *     <li>如果 Class Object 的构造器参数是 TypeVariable
+     *         <ul>
+     *             <li>class Leaf<T> { Leaf(T t){} } ; 则 paramTypes = Class<?>[]{ Object.class } (类型擦除)</li>
+     *             <li>class Loop { <T extends Number> Loop(T t){} } ; 则 paramTypes = Class<?>[]{ Number.class } (类型擦除)</li>
+     *         </ul>
+     *     </li>
+     *     <li>如果 Class Object 的构造器参数是 GenericArrayType
+     *         <ul>
+     *             <li>class Loop { <T> Loop(T[] t){} } ; 则 paramTypes = Class<?>[]{ Object[].class } (类型擦除)</li>
+     *             <li>class Loop { <T> Loop(List<T>[] t){} } ; 则 paramTypes = Class<?>[]{ List[].class } (类型擦除)</li>
+     *         </ul>
+     *     </li>
+     *     <li>如果 Class Object 的构造器参数是 ParameterizedType
+     *         <ul>
+     *             <li>class Loop { <T> Loop(Loop<T> lt) } ; 则 paramTypes = Class<?>[]{ Loop.class } (类型擦除)</li>
+     *         </ul>
+     *     </li>
+     * </ul>
      *
      * @param clazz clazz，不能为空
      * @param methodName methodName，不能为空
-     * @param paramTypes 参数
+     * @param paramTypes 参数列表，如果不传 paramTypes 或者传 null 或者传 empty array，表示无参
      * @return Method or null
-     * @throws SecurityException propagate Class#getMethod的SecurityException
+     * @throws SecurityException            propagates the SecurityException of Class#getMethod(...)
      * @throws NullPointerException         if the specified clazz or method is null
      */
     public static Method getMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) throws SecurityException {
@@ -157,22 +184,20 @@ public abstract class ReflectUtils {
     }
 
     /**
-     * packing Class.getDeclaredMethod {@link Class#getDeclaredMethod(String, Class[])}, 查找public,private,protected,package method，包括static方法
-     * 并且setAccessible(true) if require
-     * 只在Class Object中查找
+     * <p>封装 {@link Class#getDeclaredMethod(String, Class[])}</p>
      *
-     * 如果存在相同签名的桥接方法,bridged method的返回值将more specific，返回more specific的；如果存在桥接方法但参数类型不同，根据参数类型即可区分
+     * <p>查找 public、private、protected、package method，包括 static 方法。如果 Class.getDeclaredMethod 触发 NoSuchMethodException，return null</p>
      *
-     * if Class.getDeclaredMethod 触发 NoSuchMethodException return null
-     * if Class.getDeclaredMethod 触发 SecurityException 原样抛出
+     * <p>只在 Class Object 声明的 method 中找</p>
      *
-     * 带泛型信息的参数传递方法和ReflectUtils.getMethod一致
+     * <p>If more than one such method is found in C, and one of these methods has a return type that is more specific than any of the others, that method is reflected;
+     * otherwise one of the methods is chosen arbitrarily. Note that JVM could declare multiple methods with the same signature(bridge method)</p>
      *
      * @param clazz Class，不能为空
      * @param methodName methodName，不能为空
-     * @param paramTypes 参数，paramTypes不传，或者paramTypes=null,表示获取无参方法
+     * @param paramTypes 参数列表，如果不传 paramTypes 或者传 null 或者传 empty array，表示无参
      * @return Method or null
-     * @throws SecurityException propagate Class#getDeclarredMethod的SecurityException
+     * @throws SecurityException            propagates the SecurityException of Class#getDeclaredMethod(...)
      * @throws NullPointerException         if the specified clazz or method is null
      */
     public static Method getDeclaredMethod(Class<?> clazz, String methodName, Class<?>... paramTypes) throws SecurityException {
@@ -198,21 +223,25 @@ public abstract class ReflectUtils {
 
 
     /**
-     * packing Method#invoke {@link Method#invoke(Object, Object...)}, 执行方法
+     * <p>封装 {@link Method#invoke(Object, Object...)}</p>
      *
-     * 如果Method是static method, obj被忽略
+     * <p>Invokes this Method, on the specified object with the specified parameters</p>
      *
-     * 如果Method不是static method, 满足动态代理机制
+     * <p>If the underlying method is static, then the specified obj argument is ignored. It could be null</p>
      *
-     * 如果Method不是static method and param obj is null, do nothing return null
+     * <p>If the number of formal parameters required by the underlying method is 0, the supplied args array may be of length 0 or null</p>
+     *
+     * <p>If the underlying method is an instance method, it is invoked using dynamic method lookup</p>
+     *
+     * <p>If Method is not static method and the specified obj is null, do nothing return null</p>
      *
      * @param method Method，不能为空
      * @param obj    Object
-     * @param args   参数
+     * @param args   参数列表，如果不传或者传 null 或者传 empty array，表示无参
      * @return 方法执行结果 or null
-     * @throws InvocationTargetException  Method执行抛出的异常，封装成InvocationTargetException后抛出
-     * @throws IllegalArgumentException   if the Method is an instance method and the param obj.class is not assignable to Method的declaring class or 参数不匹配
-     * @throws ExceptionInInitializerError if the initialization provoked by this method fails
+     * @throws InvocationTargetException    Method 执行抛出的异常，封装成 InvocationTargetException 后抛出
+     * @throws IllegalArgumentException     if the Method is an instance method and the param obj.class is not assignable to Method的declaring class or 参数不匹配
+     * @throws ExceptionInInitializerError  if the initialization provoked by this method fails
      * @throws NullPointerException         if the specified method is null
      */
     public static Object invoke(Method method, Object obj, Object... args)
@@ -232,59 +261,59 @@ public abstract class ReflectUtils {
     }
 
     /*
-     * 如果param left与param right有相同的方法签名，返回true
+     * 如果 left 与 right 有相同的方法签名，返回 true
      */
     private static boolean isSameSignature(Method left, Method right) {
         if(left == null || right == null) return false;
-        if(left.getName().equals(right.getName()) && Arrays.equals(left.getParameterTypes(), right.getParameterTypes())) return true;
-
-        return false;
+        return left.getName().equals(right.getName()) &&
+                Arrays.equals(left.getParameterTypes(), right.getParameterTypes());
     }
 
     /*
-     * 返回param bridgeMethod itself if 它不是桥接方法 or 与该桥接方法有相同方法签名and more specific return type的bridged method or null
+     * Return the specified method if it is not bridge method, otherwise return 与该桥接方法有相同方法签名并且 more specific return type 的"被桥接方法"或者 null
      */
-    private static Method findBridgedMethodSignature(Method bridgeMethod) {
-        Assert.notNull(bridgeMethod, "参数 bridgeMethod 不能为空");
+    private static Method findBridgedMethodSignature(Method method) {
+        Assert.notNull(method, "参数 method 不能为空");
 
-        if(!bridgeMethod.isBridge()) return bridgeMethod;
+        if(!method.isBridge()) return method;
 
-        Method[] methods = bridgeMethod.getDeclaringClass().getDeclaredMethods();
-        for(Method method : methods) {
-            if(!method.equals(bridgeMethod) &&
-                isSameSignature(method, bridgeMethod) &&
-                ClazzUtils.isAssignableFrom(bridgeMethod.getReturnType(), method.getReturnType())) return method;
+        Method[] methods = method.getDeclaringClass().getDeclaredMethods();
+        for(Method md : methods) {
+            if(!md.equals(method) && isSameSignature(md, method) && ClazzUtils.isAssignableFrom(method.getReturnType(), md.getReturnType()))
+                return md;
         }
 
         return null;
     }
 
     /*
-     * 返回param bridgeMethod itself if 它不是桥接方法 or bridged method or null(?)
+     * Return the specified method if it is not bridge method, otherwise return 该桥接方法的"被桥接方法"或者 null
      */
-    private static Method findBridgedMethod(Method bridgeMethod) {
-        Assert.notNull(bridgeMethod, "参数 bridgeMethod 不能为空");
+    private static Method findBridgedMethod(Method method) {
+        Assert.notNull(method, "参数 method 不能为空");
 
-        if(!bridgeMethod.isBridge()) return bridgeMethod;
+        if(!method.isBridge()) return method;
 
-        Method[] methods = bridgeMethod.getDeclaringClass().getDeclaredMethods();
-        for(Method method : methods) {
-            if(isBridgeMethod(bridgeMethod, method)) return method;
+        Method[] methods = method.getDeclaringClass().getDeclaredMethods();
+        for(Method md : methods) {
+            if(isBridgeMethod(method, md))
+                return md;
         }
 
         return null;
     }
 
     /*
-     * 判断param bridgeMethod是否是param method的桥接方法
+     * 判断 bridgeMethod 是否是 bridgedMethod 的桥接方法
      */
-    private static boolean isBridgeMethod(Method bridgeMethod, Method method) {
-        return bridgeMethod.getDeclaringClass() == method.getDeclaringClass() &&
-               !bridgeMethod.equals(method) &&
+    private static boolean isBridgeMethod(Method bridgeMethod, Method bridgedMethod) {
+        return bridgeMethod.getDeclaringClass() == bridgedMethod.getDeclaringClass() &&
+               !bridgeMethod.equals(bridgedMethod) &&
                bridgeMethod.isBridge() &&
-               !method.isBridge() &&
-               ClazzUtils.isAssignableFrom(bridgeMethod.getReturnType(), method.getReturnType()) &&
-               isParameterAssignableFrom(bridgeMethod, method);
+               !bridgedMethod.isBridge() &&
+               bridgeMethod.getName().equals(bridgedMethod.getName()) &&
+               ClazzUtils.isAssignableFrom(bridgeMethod.getReturnType(), bridgedMethod.getReturnType()) &&
+               isParameterAssignableFrom(bridgeMethod, bridgedMethod);
     }
 
     private static boolean isParameterAssignableFrom(Method left, Method right) {
@@ -294,7 +323,8 @@ public abstract class ReflectUtils {
         Class<?>[] leftParams = left.getParameterTypes();
         Class<?>[] rightParams = right.getParameterTypes();
         for(int i=0; i < left.getParameterCount(); i++) {
-            if(!ClazzUtils.isAssignableFrom(leftParams[i], rightParams[i])) return false;
+            if(!ClazzUtils.isAssignableFrom(leftParams[i], rightParams[i]))
+                return false;
         }
 
         return true;
@@ -302,7 +332,7 @@ public abstract class ReflectUtils {
 
 
     /*
-     * 返回method itself if method是桥接方法 or method的桥接方法 or null if method 没有桥接方法
+     * Return the specified method if it is bridge method, otherwise return 与该方法的"桥接方法"或者 null 如果该方法没有桥接方法
      */
     private static Method findBridgeMethod(Method method) {
         Assert.notNull(method, "参数 method 不能为空");
@@ -311,7 +341,8 @@ public abstract class ReflectUtils {
 
         Method[] methods = method.getDeclaringClass().getDeclaredMethods();
         for(Method bridgeCandidate : methods) {
-            if(isBridgeMethod(bridgeCandidate, method)) return bridgeCandidate;
+            if(isBridgeMethod(bridgeCandidate, method))
+                return bridgeCandidate;
         }
 
         return null;
@@ -319,15 +350,17 @@ public abstract class ReflectUtils {
 
 
     /**
-     * find declared method semantics: Class Object及其继承结构形成了一颗树，对该树进行的先根深度优先搜索，搜索Class的declared method
-     * 根据MethodRecursiveProcessor的不同实现，可以做到例如find first match, collect all, collect all but exclude some, collect all and detect override, and crash等动能
-     * crash功能: 如果当前节点crash返回true,则当前节点及其之上的继承结构被忽略，既可用在find first逻辑中，也可用在collect all逻辑中
+     * <p>find declared method semantics: Class Object 及其继承结构形成了一颗树，对该树进行的先根深度优先搜索，搜索 Class 的 declared method</p>
+     *
+     * <p>根据 MethodRecursiveProcessor 的不同实现，可以做到 find first match, collect all, collect all but exclude some, collect all and detect override, and crash 等功能</p>
+     *
+     * <p>crash 功能: 如果当前节点 crash 返回 true, 则当前节点及其之上的继承结构被忽略，既可用在 find first 逻辑中，也可用在 collect all 逻辑中</p>
      *
      * @param clazz Class, 不能为空
      * @param methodProcessor MethodRecursiveProcessor, 不能为空
-     * @param depth 递归深度，0表示第一层
+     * @param depth 递归深度，0 表示第一层
      * @return Method or null
-     * @throws SecurityException propagates Class#getDeclaredFields的SecurityException
+     * @throws SecurityException  propagates the SecurityException of Class#getDeclaredMethods()
      */
     public static Method findDeclaredMethodSemantics(Class<?> clazz, MethodRecursiveProcessor methodProcessor, int depth) throws SecurityException {
         if(methodProcessor.crash(clazz, depth)) return null;
@@ -354,11 +387,17 @@ public abstract class ReflectUtils {
         return null;
     }
 
-    interface MethodRecursiveProcessor {
+    public interface MethodRecursiveProcessor {
         Method handler(Method method, int depth);
-        default List<Method> results() { return new ArrayList<>(); }
-        default boolean crash(Class<?> clazz, int depth) {return false;}
-        default boolean afterCrash(Class<?> clazz, Method[] methods) { return false; }
+        default List<Method> results() {
+            return new ArrayList<>();
+        }
+        default boolean crash(Class<?> clazz, int depth) {
+            return false;
+        }
+        default boolean afterCrash(Class<?> clazz, Method[] methods) {
+            return false;
+        }
     }
 
     public static class MatchFirstMethodProcessor implements MethodRecursiveProcessor {
@@ -382,7 +421,7 @@ public abstract class ReflectUtils {
             Assert.notNull(methodName, "参数 methodName 不能为空");
 
             return method -> method.getName().equals(methodName) &&
-                    ((paramTypes == null && method.getParameterCount()==0) ||
+                    ((paramTypes == null && method.getParameterCount() == 0) ||
                             (paramTypes != null && Arrays.equals(method.getParameterTypes(), paramTypes)));
         }
 
@@ -391,7 +430,7 @@ public abstract class ReflectUtils {
             if(predicate.test(method)) {
                 if(!method.isBridge()) return method;
                 else {
-                    //找与该bridge method有相同签名 and more specific return type的bridged method
+                    //找与该 bridge method 有相同签名 and more specific return type 的 bridged method
                     Method bridgedMethod = ReflectUtils.findBridgedMethodSignature(method);
                     if(bridgedMethod == null) return method;
 
@@ -415,7 +454,7 @@ public abstract class ReflectUtils {
         }
 
         public static Predicate<Method> defaultExclude() {
-            return method -> method.isBridge();
+            return Method::isBridge;
         }
 
         @Override
@@ -433,9 +472,13 @@ public abstract class ReflectUtils {
             return collects;
         }
 
-        protected Predicate<Method> getExclude() { return this.exclude; }
+        protected Predicate<Method> getExclude() {
+            return this.exclude;
+        }
 
-        protected Consumer<Method> getConsumer() { return this.consumer; }
+        protected Consumer<Method> getConsumer() {
+            return this.consumer;
+        }
     }
 
     public static final class DetectOverrideCollectsMethodProcessor extends CollectsMethodProcessor {
@@ -491,7 +534,7 @@ public abstract class ReflectUtils {
 
         public MethodPriorityCollectsMethodProcessor(Class<?> originalClazz, Consumer<Method> consumer, String methodName, Class<?>... paramTypes) {
             super(consumer, (Method method) -> method.isBridge() || !(method.getName().equals(methodName) &&
-                                                                     ((paramTypes == null && method.getParameterCount()==0) ||
+                                                                     ((paramTypes == null && method.getParameterCount() == 0) ||
                                                                       (paramTypes != null && Arrays.equals(method.getParameterTypes(), paramTypes)))));
             this.originalClazz = originalClazz;
         }
@@ -525,20 +568,23 @@ public abstract class ReflectUtils {
 //Field
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-     * packing Class.getField {@link Class#getField(String)}
-     * Class.getField查找逻辑: 先根深度优先
-     *  1.在Class Object中找，如果找不到，进行第2步
-     *  2.在superinterface中递归，如果找不到，进行第3步
-     *  3.在superclass中递归，如果找不到，throw NoSuchFieldException
+     * <p>封装 {@link Class#getField(String)}</p>
      *
-     * if Class.getField 触发 NoSuchFieldException return null
-     * if Class.getField 触发 SecurityException 原样抛出
+     * <p>查找 public field，包括 static 字段。如果 Class.getField 触发 NoSuchFieldException，return null</p>
+     *
+     * <p>查找逻辑: 先根深度优先</p>
+     *
+     * <ol>
+     *     <li>在 Class Object 中查找，如果找不到，进行第 2 步</li>
+     *     <li>在 superinterface 中递归，如果找不到，进行第 3 步</li>
+     *     <li>在 superclass 中递归，如果找不到，return null</li>
+     * </ol>
      *
      * @param clazz class，不能为空
      * @param fieldName fieldName, 不能为空
      * @return Field or null
-     * @throws SecurityException propagates Class#getField的SecurityException
-     * @throws NullPointerException if the specified clazz or field is null
+     * @throws SecurityException     propagates the SecurityException of Class#getField(...)
+     * @throws NullPointerException  if the specified clazz or field is null
      */
     public static Field getField(Class<?> clazz, String fieldName) throws SecurityException {
         Assert.notNull(clazz, "参数 clazz 不能为空");
@@ -553,18 +599,17 @@ public abstract class ReflectUtils {
 
 
     /**
-     * packing Class.getDeclaredField {@link Class#getDeclaredField(String)}
-     * 查找public,private,protected,package field，包括static字段，setAccessible(true) if require
-     * 只在Class Object中找
+     * <p>{@link Class#getDeclaredField(String)}</p>
      *
-     * if Class.getDeclaredField触发 NoSuchFieldException return null
-     * if Class.getDeclaredField触发 SecurityException 原样抛出
+     * <p>查找 public, private, protected, package field，包括 static 字段。如果 Class.getDeclaredField 触发 NoSuchFieldException，return null</p>
+     *
+     * <p>只在 Class Object 声明的 field 中找</p>
      *
      * @param clazz class，不能为空
      * @param fieldName fieldName，不能为空
      * @return Field or null
-     * @throws SecurityException propagates Class#getField的SecurityException
-     * @throws NullPointerException if the specified clazz or field is null
+     * @throws SecurityException     propagates the SecurityException of Class#getDeclaredField(...)
+     * @throws NullPointerException  if the specified clazz or field is null
      */
     public static Field getDeclaredField(Class<?> clazz, String fieldName) throws SecurityException {
         Assert.notNull(clazz, "参数 clazz 不能为空");
@@ -590,15 +635,20 @@ public abstract class ReflectUtils {
 
 
     /**
-     * packing Field#get {@link Field#get(Object)} 获取Field的值
-     * 如果Field是static，参数obj会被忽略
+     * <p>封装 {@link Field#get(Object)}</p>
+     *
+     * <p>If this field is a static field, the obj argument is ignored; it may be null</p>
+     *
+     * <p>If the field has a primitive type, the value is wrapped in an object before being returned</p>
+     *
+     * <p>If Field is instance field and the specified obj is null, do nothing return null</p>
      *
      * @param field Field, 不能为空
      * @param obj   实例对象
-     * @return Field的值 or null when Field is instance field and param obj is null
-     * @throws IllegalArgumentException     if the param obj.class is not assignable to Field的declaring class
+     * @return Field 的值 or null when Field is instance field and param obj is null
+     * @throws IllegalArgumentException     if the param obj.class is not assignable to Field 的 declaring class
      * @throws ExceptionInInitializerError  if the initialization provoked by this method fails
-     * @throws NullPointerException if the specified field is null
+     * @throws NullPointerException         if the specified field is null
      */
     public static Object get(Field field, Object obj)
             throws IllegalArgumentException, ExceptionInInitializerError, IllegalAccessException {
@@ -618,18 +668,22 @@ public abstract class ReflectUtils {
     }
 
     /**
-     * packing Field#set {@link Field#set(Object, Object)}, 为Field设置值
-     * 如果该Field是static，参数obj会被忽略
+     * <p>封装 {@link Field#set(Object, Object)}</p>
      *
-     * 如果Field is instance field and param obj is null, do nothing
-     * 如果Field is static and final, do nothing
+     * <p>如果该 Field 是 static，参数 obj 会被忽略</p>
+     *
+     * <p>If Field is instance field and the specified obj is null, do nothing return null</p>
+     *
+     * <p>If Field is static and final, do nothing</p>
      *
      * @param field Field
      * @param obj   实例对象
      * @param value value
-     * @throws IllegalArgumentException     if Field is instance filed and param obj.class is not assignable to Filed的declaring class 或者 参数类型转化失败
+     * @throws IllegalArgumentException     if the specified object is not an instance of the class or interface declaring this field
+     *                                      or if, after possible "unwrapping", the new value cannot be converted to the type of this
+     *                                      field by an "identity or wide conversion" (runtime)
      * @throws ExceptionInInitializerError  if the initialization provoked by this method fails
-     * @throws NullPointerException if the specified field is null
+     * @throws NullPointerException         if the specified field is null
      */
     public static void set(Field field, Object obj, Object value)
             throws IllegalArgumentException, ExceptionInInitializerError, IllegalAccessException {
@@ -653,14 +707,21 @@ public abstract class ReflectUtils {
 
 
     /**
-     * 融合Class#getField的查找逻辑和declared语义, {@link ReflectUtils#findDeclaredFieldHelp(Class, String)}
-     * setAccessible if require
+     * <p>查找 public、private、protected、package field，包括 static 字段。如果找不到，返回 null</p>
+     *
+     * <p>在整个继承结构中查找：先根深度优先(和 {@link ReflectUtils#getField(Class, String)} 查找逻辑一致)</p>
+     *
+     * <ol>
+     *     <li>在 Class Object 中查找，如果找不到，进行第 2 步</li>
+     *     <li>在 superinterface 中递归，如果找不到，进行第 3 步</li>
+     *     <li>在 superclass 中递归，如果找不到，return null</li>
+     * </ol>
      *
      * @param clazz Class, 不能为空
      * @param fieldName fieldName, 不能为空
      * @return Field or null if not find
-     * @throws SecurityException propagates Class#getDeclaredField的SecurityException
-     * @throws NullPointerException if the specified clazz or field is null
+     * @throws SecurityException     propagates the SecurityException of Class#getDeclaredField(...)
+     * @throws NullPointerException  if the specified clazz or field is null
      */
     public static Field findDeclaredField(Class<?> clazz, String fieldName) throws SecurityException {
         Assert.notNull(clazz, "参数 clazz 不能为空");
@@ -670,19 +731,7 @@ public abstract class ReflectUtils {
         if(field != null) makeAccessible(field);
         return field;
     }
-    /**
-     * 查找public private protected package field，包括static字段
-     * 查找逻辑: 先根深度优先(和Class#getField查找逻辑一致)
-     *  1.在Class Object中找，如果找不到，进行第2步
-     *  2.在superinterface中递归，如果找不到，进行第3步
-     *  3.在superclass中递归，如果找不到，return null
-     *
-     * @param clazz Class
-     * @param fieldName fieldName，不应为空
-     * @return Field or null if not find
-     * @throws SecurityException propagates Class#getDeclaredField的SecurityException
-     * @throws NullPointerException if fieldName is null
-     */
+
     private static Field findDeclaredFieldHelp(Class<?> clazz, String fieldName)
             throws SecurityException, NullPointerException {
         if(clazz == null) return null;
@@ -690,7 +739,7 @@ public abstract class ReflectUtils {
         try {
             return clazz.getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
-            //continue
+            //do nothing
         }
 
         for(Class<?> inter : clazz.getInterfaces()) {
@@ -703,17 +752,22 @@ public abstract class ReflectUtils {
     }
 
     /**
-     * the other realization for findDeclaredField
-     * 融合Class#getField的查找逻辑和declared语义, {@link ReflectUtils#findDeclaredFieldPredicate(Class, Predicate)}
-     * 查找public private protected package field，包括static字段
-     * setAccessible if require
+     * <p>查找 public、private、protected、package field，包括 static 字段。如果找不到，返回 null</p>
      *
-     * @param clazz Class,不能为空
-     * @param fieldName fieldName,不能为空
+     * <p>在整个继承结构中查找：先根深度优先(和 {@link ReflectUtils#getField(Class, String)} 查找逻辑一致)</p>
+     *
+     * <ol>
+     *     <li>在 Class Object 中查找，如果找不到，进行第 2 步</li>
+     *     <li>在 superinterface 中递归，如果找不到，进行第 3 步</li>
+     *     <li>在 superclass 中递归，如果找不到，return null</li>
+     * </ol>
+     *
+     * @param clazz Class, 不能为空
+     * @param fieldName fieldName, 不能为空
      * @param fieldType fieldType
-     * @return Field or null if not found
-     * @throws SecurityException propagates Class#getDeclaredField的SecurityException
-     * @throws NullPointerException if the specified clazz or field is null
+     * @return Field or null if not find
+     * @throws SecurityException     propagates the SecurityException of Class#getDeclaredField(...)
+     * @throws NullPointerException  if the specified clazz or field is null
      */
     public static Field findDeclaredField(Class<?> clazz, String fieldName, Class<?> fieldType) throws SecurityException {
         Assert.notNull(clazz, "参数 clazz 不能为空");
@@ -725,15 +779,21 @@ public abstract class ReflectUtils {
     }
 
     /**
-     * 查找逻辑: 先根深度优先(和Class#getField查找逻辑一致)
-     *  1.在Class Object中找，如果找不到，进行第2步
-     *  2.在superinterface中递归，如果找不到，进行第3步
-     *  3.在superclass中递归，如果找不到，return null
+     * <p>查找 public、private、protected、package field，包括 static 字段。如果找不到，返回 null</p>
      *
-     * @param clazz Class，不能为空
+     * <p>在整个继承结构中查找：先根深度优先(和 {@link ReflectUtils#getField(Class, String)} 查找逻辑一致)</p>
+     *
+     * <ol>
+     *     <li>在 Class Object 中查找，如果找不到，进行第 2 步</li>
+     *     <li>在 superinterface 中递归，如果找不到，进行第 3 步</li>
+     *     <li>在 superclass 中递归，如果找不到，return null</li>
+     * </ol>
+     *
+     * @param clazz Class, 不能为空
      * @param predicate Predicate，不能为空
-     * @return Field or null
-     * @throws SecurityException propagates Class#getDeclaredField的SecurityException
+     * @return Field or null if not find
+     * @throws SecurityException     propagates the SecurityException of Class#getDeclaredField(...)
+     * @throws NullPointerException if the specified clazz or predicate is null
      */
     public static Field findDeclaredFieldPredicate(Class<?> clazz, Predicate<Field> predicate) throws SecurityException {
         Field[] fields = clazz.getDeclaredFields();
@@ -755,14 +815,20 @@ public abstract class ReflectUtils {
     }
 
     /**
-     * 融合Class#getField的查找逻辑和declared语义 {@link ReflectUtils#findDeclaredFieldConsumer(Class, Consumer)}
-     * 查找所有public private protected package field，包括static字段
-     * 返回结果的按查找路径分块有序
+     * <p>查找 public、private、protected、package field，包括 static 字段</p>
+     *
+     * <p>在整个继承结构中查找：先根深度优先(和 {@link ReflectUtils#getField(Class, String)} 查找逻辑一致)</p>
+     *
+     * <ol>
+     *     <li>在 Class Object 中查找所有 declared field，应用 Consumer</li>
+     *     <li>在 superinterface 中递归</li>
+     *     <li>在 superclass 中递归</li>
+     * </ol>
      *
      * @param clazz Class, 不能为空
      * @return Field 数组
-     * @throws SecurityException propagates Class#getDeclaredFields的SecurityException
-     * @throws NullPointerException if the specified clazz is null
+     * @throws SecurityException     propagates the SecurityException of Class#getDeclaredFields(...)
+     * @throws NullPointerException  if the specified clazz is null
      */
     public static Field[] findDeclaredFields(Class<?> clazz) throws SecurityException {
         Assert.notNull(clazz, "参数 clazz 不能为空");
@@ -773,14 +839,20 @@ public abstract class ReflectUtils {
     }
 
     /**
-     * 查找逻辑: 先根深度优先(和Class#getField查找逻辑一致)
-     *  1.在Class Object中查找所有的declared field，对每一个declared field，应用Consumer#accept
-     *  2.在superinterface中递归
-     *  3.在superclass中递归
+     * <p>查找 public、private、protected、package field，包括 static 字段</p>
      *
-     * @param clazz Class，不能为空
+     * <p>在整个继承结构中查找：先根深度优先(和 {@link ReflectUtils#getField(Class, String)} 查找逻辑一致)</p>
+     *
+     * <ol>
+     *     <li>在 Class Object 中查找所有 declared field，应用 Consumer</li>
+     *     <li>在 superinterface 中递归</li>
+     *     <li>在 superclass 中递归</li>
+     * </ol>
+     *
+     * @param clazz Class, 不能为空
      * @param consumer Consumer，不能为空
-     * @throws SecurityException propagates Class#getDeclaredFields的SecurityException
+     * @throws SecurityException     propagates the SecurityException of Class#getDeclaredFields(...)
+     * @throws NullPointerException  if the specified clazz or consumer is null
      */
     public static void findDeclaredFieldConsumer(Class<?> clazz, Consumer<Field> consumer) throws SecurityException {
         Field[] fields = clazz.getDeclaredFields();
@@ -798,16 +870,17 @@ public abstract class ReflectUtils {
 
     }
 
-
     /**
-     * find declared field semantics: Class Object及其继承结构形成了一颗树，对该树进行的先根深度优先搜索，搜索Class的declared field
-     * 根据FieldRecursiveProcessor的不同实现，可以做到例如find first match, collect all, collect all but exclude some, and crash等功能
-     * crash功能: 如果当前节点crash返回true,则当前节点及其之上的继承结构被忽略，既可用在find first逻辑中，也可用在collect all逻辑中
+     * <p>find declared field semantics: Class Object 及其继承结构形成了一颗树，对该树进行的先根深度优先搜索，搜索 Class 的 declared field</p>
+     *
+     * <p>根据 FieldRecursiveProcessor 的不同实现，可以做到 find first match, collect all, collect all but exclude some, and crash 等功能</p>
+     *
+     * <p>crash 功能: 如果当前节点 crash 返回 true, 则当前节点及其之上的继承结构被忽略，既可用在 find first 逻辑中，也可用在 collect all 逻辑中</p>
      *
      * @param clazz Class, 不能为空
      * @param recursiveProcessor FieldRecursiveProcessor, 不能为空
-     * @param depth 递归深度，0表示第一层
-     * @return Field or null
+     * @param depth 递归深度，0 表示第一层
+     * @return Method or null
      * @throws SecurityException propagates Class#getDeclaredFields的SecurityException
      */
     public static Field findDeclaredFieldSemantics(Class<?> clazz, FieldRecursiveProcessor recursiveProcessor, int depth) throws SecurityException {
@@ -840,7 +913,7 @@ public abstract class ReflectUtils {
     }
 
 
-    interface FieldRecursiveProcessor {
+    public interface FieldRecursiveProcessor {
         Field handle(Field field, int depth);
         default List<Field> results() { return new ArrayList<>(); }
         default boolean crash(Class<?> clazz, int depth) {return false;}
@@ -1080,6 +1153,120 @@ public abstract class ReflectUtils {
         @Override
         protected void determineAfterCrashing(Field field, int depth) {
             setAfterCrashing(true);
+        }
+    }
+
+
+    public static void findDeclaredFieldStructures(Class<?> clazz, RecursiveProcessor<Field> processor, int depth) {
+        //assert clazz != null
+        //assert processor != null
+
+        if(processor.before(clazz, depth)) return;
+
+        Field[] fields = clazz.getDeclaredFields();
+        for(Field field : fields) {
+            if(processor.handler(field)) break;
+        }
+
+        if(processor.after(clazz, depth)) return;
+
+        Class<?>[] interfaces = clazz.getInterfaces();
+        for(Class<?> inter : interfaces) {
+            findDeclaredFieldStructures(inter, processor, depth + 1);
+
+            if(processor.backtrack(clazz, depth)) return;
+        }
+
+        Class<?> superclass = clazz.getSuperclass();
+        if(superclass != null) {
+            findDeclaredFieldStructures(superclass, processor, depth + 1);
+
+            processor.backtrack(clazz, depth);
+        }
+    }
+
+    public interface RecursiveProcessor<T> {
+        boolean before(Class<?> clazz, int depth);
+        boolean handler(T t);
+        boolean after(Class<?> clazz, int depth);
+        boolean backtrack(Class<?> clazz, int depth);
+        List<T> results();
+    }
+
+    public static abstract class AbstractRecursiveProcessor<T> implements RecursiveProcessor<T> {
+        protected final List<T> results = new ArrayList<>();
+        protected final Predicate<T> predicate;
+        protected final Consumer<T> consumer;
+
+        public AbstractRecursiveProcessor(Predicate<T> predicate, Consumer<T> consumer) {
+            this.predicate = predicate;
+            this.consumer = consumer;
+        }
+
+        @Override
+        public List<T> results() {
+            return results;
+        }
+    }
+
+    public static class FirstMatchingRecursiveProcessor<T> extends AbstractRecursiveProcessor<T> {
+
+        public FirstMatchingRecursiveProcessor(Predicate<T> predicate, Consumer<T> consumer) {
+            super(predicate, consumer);
+        }
+
+        @Override
+        public boolean before(Class<?> clazz, int depth) {
+            return false;
+        }
+
+        @Override
+        public boolean handler(T t) {
+            if(predicate.test(t)) {
+                results.add(t);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean after(Class<?> clazz, int depth) {
+            return !results.isEmpty();
+        }
+
+        @Override
+        public boolean backtrack(Class<?> clazz, int depth) {
+            return after(clazz, depth);
+        }
+    }
+
+    public static class CollectsRecursiveProcessor<T> extends AbstractRecursiveProcessor<T> {
+
+        public CollectsRecursiveProcessor(Predicate<T> exclude, Consumer<T> consumer) {
+            super(exclude, consumer);
+        }
+
+        @Override
+        public boolean before(Class<?> clazz, int depth) {
+            return false;
+        }
+
+        @Override
+        public boolean handler(T t) {
+            if(predicate == null || !predicate.test(t)) {  //!exclude
+                results.add(t);
+            }
+            return false;
+        }
+
+        @Override
+        public boolean after(Class<?> clazz, int depth) {
+            return false;
+        }
+
+        @Override
+        public boolean backtrack(Class<?> clazz, int depth) {
+            return false;
         }
     }
 

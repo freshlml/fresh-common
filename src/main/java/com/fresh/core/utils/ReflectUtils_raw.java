@@ -8,7 +8,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Deprecated
-public class ReflectUtils_raw {
+public final class ReflectUtils_raw {
+
+    private ReflectUtils_raw() {}
 
     private static final Predicate<Method> isNotBridge = method -> !method.isBridge();
     //private static final Predicate<Method> isUserDeclaredMethod = method -> !method.isSynthetic() && method.getDeclaringClass() != Object.class && !method.isBridge();
