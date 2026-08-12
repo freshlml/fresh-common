@@ -88,7 +88,7 @@ public final class LogicParser {
                     }
             }
         }
-        
+
         List<Logic> rs = Arrays.stream(logics).filter(Objects::nonNull).collect(Collectors.toList());
         if(rs.size() != 1)
             throw new IllegalArgumentException("格式错误: \"" + expression + "\"");
