@@ -3,7 +3,7 @@ package com.fresh.core.sqlsyntax;
 
 import java.util.Arrays;
 
-public abstract class SqlUtils {
+public final class SqlUtils {
     static final char LEFT_PARENTHESES = '(';
     static final char RIGHT_PARENTHESES = ')';
     static final char SQL_TERMINAL = ';';
@@ -192,7 +192,7 @@ public abstract class SqlUtils {
             } else if(c == LEFT_PARENTHESES) {
                 sts = setPos(sts, pos);
                 parentheses++;
-            } else if(!ASCII_whitespace(c)) { //substitute with `!Character.isWhitespace(c)` if necessary
+            } else if(!ASCII_whitespace(c)) {
                 throw new IllFormedSqlException("illegal leading character for sql [ " + sql + " ], near '" + sql.substring(pos) + "'");
             }
         }
@@ -203,7 +203,7 @@ public abstract class SqlUtils {
         boolean tailWrong = false;
         int nonEmptyTail = pos;
         boolean tml = false;
-        for(; endPos >= pos; endPos--) {
+        for(; endPos >= pos; endPos--) {   //find the last character(not ';' and not whitespace)
             char c = sql.charAt(endPos);
 
             if(c == SQL_TERMINAL && tailWrong) {
@@ -246,7 +246,7 @@ public abstract class SqlUtils {
                     if(havePos(sts) == 0) throw new IllFormedSqlException("no matched parentheses for sql [ " + sql + " ], near '" + sql.substring(pos) + "'");
                     popPos(sts);
 
-                    if(havePos(sts) < parentheses) {
+                    if(havePos(sts) < parentheses) {  //消减 parentheses
                         sb.replace(pos, pos + 1, " ");
                         parentheses--;
                     }
@@ -382,9 +382,9 @@ public abstract class SqlUtils {
             this.prev = prevMode;
         }
 
-        //call this method when traverse backward
+        //call this method when traverse forward
         int handle(CharSequence csq, int idx) {
-            if(prev) throw new IllegalStateException("can not traverse backward in prev mode");
+            if(prev) throw new IllegalStateException("can not traverse forward in prev mode");
 
             char c = csq.charAt(idx);
             /*note: In MySQL, If the `ANSI_QUOTES` SQL mode is enabled, double quote will act as same as `.
@@ -416,9 +416,9 @@ public abstract class SqlUtils {
             return surroundChar == NUL_CHAR ? -1 : 2;  //outside or inside
         }
 
-        //call this method when traverse forward
+        //call this method when traverse backward
         int handle(int idx, CharSequence csq) {
-            if(!prev) throw new IllegalStateException("can not traverse forward in next mode");
+            if(!prev) throw new IllegalStateException("can not traverse backward in next mode");
 
             char c = csq.charAt(idx);
             if((surroundChar == SINGLE_QUOTE || surroundChar == DOUBLE_QUOTE) && c == surroundChar) {
@@ -445,11 +445,11 @@ public abstract class SqlUtils {
     }
 
     public static void main(String[] argv) {
-        System.out.println(matchedPair(" ) ( ) (", '(', ')'));  //false
+        /*System.out.println(matchedPair(" ) ( ) (", '(', ')'));  //false
         System.out.println(matchedPair(" ( ( (  ')\\'' ) ) ) '('  ( ) ", '(', ')'));   //true
 
         System.out.println(matchedPair(" what ${  ${ placeholder  } } ", "${", "}"));  //true
-        System.out.println(matchedPair(" single ' double \" ", "'", "\""));            //true
+        System.out.println(matchedPair(" single ' double \" ", "'", "\""));            //true*/
 
         /*
 
@@ -479,7 +479,7 @@ from city )
                 "\t# kfjsafkj\n" +
                 "\t/*fasfas*/\n" +
                 "        ;/*faskfsjdfsdfsd*/";
-        System.out.println(truncate("select id /*!from*/ city;", true, true));
+        System.out.println(truncate(sql, true, true));
 
     }
 

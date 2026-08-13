@@ -2,7 +2,9 @@ package com.fresh.core.sqlsyntax;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class SqlParserUtil {
+public final class SqlParserUtil {
+
+    private SqlParserUtil() {}
 
     //去除 sql 前置后置空格，换行，制表符和多余的 () 对. 必要时追加 ";"
     @Deprecated  //replace with SqlUtils#truncate(String, boolean, boolean)
